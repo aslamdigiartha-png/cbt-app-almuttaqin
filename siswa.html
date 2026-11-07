@@ -25,20 +25,20 @@
     <header class="bg-blue-800 text-white flex-shrink-0 z-10 shadow-md">
         <div class="flex items-center justify-between px-4 py-3 border-b border-blue-700">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center text-blue-800 font-bold text-xs shadow-inner">LOGO</div>
+                <img id="logo-sekolah" src="https://via.placeholder.com/150/FFFFFF/000000/?text=CBT" class="w-10 h-10 bg-white rounded-full object-cover shadow-inner">
                 <div>
-                    <h1 class="font-bold text-lg leading-tight">CBT ANBK SIMULATOR</h1>
+                    <h1 class="font-bold text-lg leading-tight" id="nama-sekolah-header">CBT ANBK SIMULATOR</h1>
                     <p class="text-xs text-blue-200">Asesmen Akhir Jenjang</p>
                 </div>
             </div>
             <div class="hidden md:flex flex-col text-right">
                 <span class="font-bold text-base" id="display-nama">Peserta Ujian</span>
-                <span class="text-xs text-blue-200">SMP Islam Terpadu Al-Muttaqin</span>
+                <span class="text-xs text-blue-200" id="nama-sekolah-sub">SMP Islam Terpadu Al-Muttaqin</span>
             </div>
         </div>
 
         <div class="flex items-center justify-between px-4 py-2 bg-blue-700">
-            <div class="font-semibold text-sm">Literasi Membaca</div>
+            <div class="font-semibold text-sm">Mata Pelajaran: <span id="display-mapel" class="text-yellow-300">Memuat...</span></div>
             <div class="flex items-center gap-4">
                 <div class="flex items-center bg-blue-900 px-3 py-1 rounded border border-blue-600 shadow-inner">
                     <span class="text-xs mr-2 uppercase text-blue-300">Sisa Waktu:</span>
@@ -53,14 +53,11 @@
 
     <!-- Ruang Pengerjaan -->
     <main class="flex flex-1 flex-col lg:flex-row overflow-hidden relative">
-        
-        <!-- Kiri: Stimulus -->
         <section class="lg:w-2/5 bg-white border-r border-gray-300 flex flex-col h-1/2 lg:h-full">
             <div class="bg-gray-100 border-b border-gray-300 px-4 py-2 font-bold text-gray-700 sticky top-0">Informasi / Wacana</div>
             <div id="stimulus-content" class="p-6 overflow-y-auto flex-1 text-gray-800 text-justify leading-relaxed"></div>
         </section>
 
-        <!-- Tengah: Soal & Pilihan -->
         <section class="lg:w-2/5 bg-blue-50 flex flex-col h-1/2 lg:h-full relative shadow-inner">
             <div class="flex justify-between items-center bg-white border-b border-gray-300 px-4 py-2 font-bold text-gray-700 sticky top-0 shadow-sm z-10">
                 <span>Soal No. <span id="current-question-no" class="text-xl text-blue-700">1</span></span>
@@ -68,7 +65,6 @@
             
             <div id="question-content" class="p-6 overflow-y-auto flex-1 pb-24 text-gray-800"></div>
 
-            <!-- Navigasi Bawah -->
             <div class="absolute bottom-0 left-0 w-full bg-white border-t border-gray-300 p-4 flex justify-between items-center z-10 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
                 <button id="btn-prev" onclick="navigate(-1)" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded shadow transition disabled:opacity-50">&larr; Sebelumnya</button>
                 <label class="flex items-center gap-2 bg-yellow-400 hover:bg-yellow-500 text-yellow-900 px-4 py-2 rounded shadow cursor-pointer font-semibold transition">
@@ -78,7 +74,6 @@
             </div>
         </section>
 
-        <!-- Kanan: Sidebar Nomor Soal -->
         <section class="lg:w-1/5 bg-white border-l border-gray-300 flex flex-col h-full z-20 shadow-[-4px_0_10px_-3px_rgba(0,0,0,0.1)]">
             <div class="bg-gray-800 text-white px-4 py-2 font-bold text-center">Daftar Soal</div>
             <div class="p-4 overflow-y-auto flex-1">
@@ -92,7 +87,6 @@
         </section>
     </main>
 
-    <!-- Overlay Loading Keluar -->
     <div id="lock-screen" class="fixed inset-0 bg-black/90 z-50 hidden flex-col items-center justify-center text-white">
         <h2 class="text-3xl font-bold mb-2">Ujian Selesai!</h2>
         <p class="text-lg text-gray-300 mb-4">Menyimpan dan mengunggah jawaban ke server...</p>
@@ -100,47 +94,68 @@
     </div>
 
     <script>
-        // Mengambil nama user dari penyimpanan sesi
+        // 1. MUAT IDENTITAS SEKOLAH & SISWA
         const userNISN = localStorage.getItem('userName');
-        document.getElementById('display-nama').innerText = "NISN: " + (userNISN ? userNISN.toUpperCase() : "PESERTA");
+        const schoolName = localStorage.getItem('schoolName') || 'SMP Islam Terpadu Al-Muttaqin';
+        const schoolLogo = localStorage.getItem('schoolLogo');
+        const mapelAktif = localStorage.getItem('mapelUjian') || 'Ilmu Pengetahuan Alam (IPA)'; // Simulasi Mapel
 
-        // Database Dummy 40 Soal
+        document.getElementById('display-nama').innerText = "NISN: " + (userNISN ? userNISN.toUpperCase() : "PESERTA");
+        document.getElementById('nama-sekolah-header').innerText = schoolName.toUpperCase();
+        document.getElementById('nama-sekolah-sub').innerText = schoolName;
+        document.getElementById('display-mapel').innerText = mapelAktif;
+        if(schoolLogo) document.getElementById('logo-sekolah').src = schoolLogo;
+
+        // 2. DATABASE SOAL (SIMULASI 40 SOAL)
         const totalQuestions = 40;
-        const questionsData = [];
+        let questionsData = [];
 
         for (let i = 1; i <= totalQuestions; i++) {
-            let q = { id: i, ragu: false, isAnswered: false, answer: null };
+            let q = { id_asli: i, ragu: false, isAnswered: false, answer: null }; // Gunakan id_asli agar tidak tertukar saat diacak
 
             if (i === 1) {
                 q.type = 'pg';
-                q.stimulus = `<h3 class="font-bold text-lg mb-2">Perubahan Iklim</h3><p>Aktivitas manusia telah menjadi pendorong utama perubahan iklim sejak abad ke-19, terutama akibat pembakaran bahan bakar fosil seperti batu bara, minyak, dan gas.</p>`;
+                q.stimulus = `<h3 class="font-bold text-lg mb-2">Perubahan Iklim</h3><p>Aktivitas manusia telah menjadi pendorong utama...</p>`;
                 q.questionText = "Berdasarkan teks di samping, apa pendorong utama perubahan iklim sejak tahun 1800-an?";
-                q.options = ['A. Siklus matahari', 'B. Pembakaran bahan bakar fosil', 'C. Reboisasi hutan', 'D. Pergeseran tektonik', 'E. Letusan gunung'];
+                q.options = ['A. Siklus matahari', 'B. Pembakaran fosil', 'C. Reboisasi hutan', 'D. Pergeseran tektonik', 'E. Letusan gunung'];
             } 
             else if (i === 2) {
                 q.type = 'pg_kompleks';
                 q.answer = [];
-                q.stimulus = `<h3 class="font-bold text-lg mb-2">Ekosistem Laut</h3><p>Terumbu karang adalah salah satu ekosistem paling beragam di bumi. Polusi plastik dan penangkapan ikan berlebihan sangat mengancam keseimbangannya.</p>`;
+                q.stimulus = `<h3 class="font-bold text-lg mb-2">Ekosistem Laut</h3><p>Terumbu karang adalah salah satu ekosistem paling beragam...</p>`;
                 q.questionText = "Pilihlah <strong>lebih dari satu</strong> pernyataan yang benar berdasarkan wacana!";
-                q.options = ['Terumbu karang memiliki keragaman ekosistem tinggi.', 'Semua spesies laut tahan terhadap polusi plastik.', 'Penangkapan ikan berlebihan mengancam terumbu karang.', 'Ekosistem laut hanya terdiri dari 1 spesies.'];
+                q.options = ['Terumbu karang beragam.', 'Semua spesies tahan polusi.', 'Penangkapan ikan berlebihan mengancam.', 'Ekosistem laut 1 spesies.'];
             } 
             else if (i === 3) {
                 q.type = 'menjodohkan';
                 q.answer = {}; 
-                q.stimulus = `<h3 class="font-bold text-lg mb-2">Penemuan Sejarah</h3><p>Mesin uap memicu revolusi industri di Eropa, sedangkan penemuan telepon mengubah cara manusia berkomunikasi dari jarak jauh.</p>`;
+                q.stimulus = `<h3 class="font-bold text-lg mb-2">Penemuan Sejarah</h3><p>Mesin uap memicu revolusi industri di Eropa...</p>`;
                 q.questionText = "Jodohkanlah penemuan berikut dengan dampaknya secara tepat!";
-                q.statements = ['Mesin Uap', 'Telepon', 'Internet'];
-                q.choices = ['Revolusi Industri', 'Komunikasi Jarak Jauh', 'Pertukaran Data Global'];
+                q.statements = ['Mesin Uap', 'Telepon'];
+                q.choices = ['Revolusi Industri', 'Komunikasi Jarak Jauh'];
             } 
             else {
                 q.type = 'pg';
                 q.stimulus = `<p class="italic text-gray-500 text-center mt-10">Tidak ada stimulus untuk soal ini.</p>`;
-                q.questionText = `Ini adalah simulasi pertanyaan pilihan ganda biasa untuk soal nomor ${i}.`;
-                q.options = ['Opsi Jawaban A', 'Opsi Jawaban B', 'Opsi Jawaban C', 'Opsi Jawaban D', 'Opsi Jawaban E'];
+                q.questionText = `Ini adalah simulasi pertanyaan pilihan ganda untuk ID soal asli ${i}.`;
+                q.options = ['Opsi A', 'Opsi B', 'Opsi C', 'Opsi D', 'Opsi E'];
             }
             questionsData.push(q);
         }
 
+        // 3. ALGORITMA PENGACAKAN SOAL (Fisher-Yates Shuffle)
+        // Fungsi ini akan mengacak posisi elemen di dalam array questionsData
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+        
+        // Panggil fungsi acak SETELAH soal dimuat, TAPI SEBELUM dirender ke layar
+        shuffleArray(questionsData); 
+
+        // 4. LOGIKA APLIKASI
         let currentIndex = 0;
         let timerSeconds = 90 * 60; // 90 Menit
         let timerInterval;
@@ -157,7 +172,8 @@
             questionsData.forEach((q, index) => {
                 const btn = document.createElement('button');
                 btn.id = `grid-btn-${index}`;
-                btn.innerText = q.id;
+                // TAMPILAN NOMOR DI GRID SELALU BERURUT (1-40) MESKIPUN SOALNYA ACAK
+                btn.innerText = index + 1; 
                 btn.onclick = () => goToQuestion(index);
                 btn.className = `w-10 h-10 flex items-center justify-center font-semibold rounded text-sm transition shadow-sm border`;
                 updateGridBtnColor(btn, index);
@@ -179,7 +195,8 @@
 
         function renderQuestion(index) {
             const q = questionsData[index];
-            document.getElementById('current-question-no').innerText = q.id;
+            // Tampilkan nomor soal berurut (1-40) bukan ID aslinya
+            document.getElementById('current-question-no').innerText = index + 1;
             document.getElementById('stimulus-content').innerHTML = q.stimulus;
             
             const qContainer = document.getElementById('question-content');
@@ -189,11 +206,7 @@
                 html += `<div class="flex flex-col gap-3">`;
                 q.options.forEach((opt, i) => {
                     const isChecked = q.answer === i ? 'checked' : '';
-                    html += `
-                    <label class="flex items-start p-3 border border-gray-300 rounded-lg cursor-pointer hover:bg-blue-100 transition ${isChecked ? 'bg-blue-50 border-blue-400' : 'bg-white'}">
-                        <input type="radio" name="pg_${q.id}" value="${i}" onchange="handleAnswer('pg', ${i})" class="mt-1 mr-3 w-4 h-4 accent-blue-600" ${isChecked}>
-                        <span>${opt}</span>
-                    </label>`;
+                    html += `<label class="flex items-start p-3 border border-gray-300 rounded-lg cursor-pointer hover:bg-blue-100 transition ${isChecked ? 'bg-blue-50 border-blue-400' : 'bg-white'}"><input type="radio" name="pg_${q.id_asli}" value="${i}" onchange="handleAnswer('pg', ${i})" class="mt-1 mr-3 w-4 h-4 accent-blue-600" ${isChecked}><span>${opt}</span></label>`;
                 });
                 html += `</div>`;
             } 
@@ -201,57 +214,35 @@
                 html += `<div class="flex flex-col gap-3">`;
                 q.options.forEach((opt, i) => {
                     const isChecked = q.answer.includes(i) ? 'checked' : '';
-                    html += `
-                    <label class="flex items-start p-3 border border-gray-300 rounded-lg cursor-pointer hover:bg-blue-100 transition ${isChecked ? 'bg-blue-50 border-blue-400' : 'bg-white'}">
-                        <input type="checkbox" name="pgk_${q.id}" value="${i}" onchange="handleAnswer('pgk', ${i})" class="mt-1 mr-3 w-5 h-5 accent-blue-600" ${isChecked}>
-                        <span>${opt}</span>
-                    </label>`;
+                    html += `<label class="flex items-start p-3 border border-gray-300 rounded-lg cursor-pointer hover:bg-blue-100 transition ${isChecked ? 'bg-blue-50 border-blue-400' : 'bg-white'}"><input type="checkbox" name="pgk_${q.id_asli}" value="${i}" onchange="handleAnswer('pgk', ${i})" class="mt-1 mr-3 w-5 h-5 accent-blue-600" ${isChecked}><span>${opt}</span></label>`;
                 });
                 html += `</div>`;
             }
             else if (q.type === 'menjodohkan') {
-                html += `<div class="overflow-x-auto border border-gray-300 rounded-lg shadow-sm">
-                            <table class="w-full text-center bg-white border-collapse">
-                                <thead>
-                                    <tr class="bg-gray-100 border-b border-gray-300 text-sm">
-                                        <th class="p-3 border-r border-gray-300 text-left w-1/2">Pernyataan</th>`;
+                html += `<div class="overflow-x-auto border border-gray-300 rounded-lg shadow-sm"><table class="w-full text-center bg-white border-collapse"><thead><tr class="bg-gray-100 border-b border-gray-300 text-sm"><th class="p-3 border-r border-gray-300 text-left w-1/2">Pernyataan</th>`;
                 q.choices.forEach(choice => html += `<th class="p-2 border-r border-gray-300">${choice}</th>`);
-                html += `           </tr>
-                                </thead>
-                                <tbody>`;
+                html += `</tr></thead><tbody>`;
                 q.statements.forEach((stmt, sIdx) => {
-                    html += `<tr class="border-b border-gray-200 hover:bg-gray-50 transition">
-                                <td class="p-3 border-r border-gray-300 text-left text-sm font-medium">${stmt}</td>`;
+                    html += `<tr class="border-b border-gray-200 hover:bg-gray-50 transition"><td class="p-3 border-r border-gray-300 text-left text-sm font-medium">${stmt}</td>`;
                     q.choices.forEach((_, cIdx) => {
                         const isChecked = q.answer[sIdx] === cIdx ? 'checked' : '';
-                        html += `<td class="p-3 border-r border-gray-300">
-                                    <input type="radio" name="jodoh_${sIdx}" onchange="handleAnswer('jodoh', ${sIdx}, ${cIdx})" class="w-5 h-5 accent-blue-600 cursor-pointer" ${isChecked}>
-                                 </td>`;
+                        html += `<td class="p-3 border-r border-gray-300"><input type="radio" name="jodoh_${q.id_asli}_${sIdx}" onchange="handleAnswer('jodoh', ${sIdx}, ${cIdx})" class="w-5 h-5 accent-blue-600 cursor-pointer" ${isChecked}></td>`;
                     });
                     html += `</tr>`;
                 });
-                html += `       </tbody>
-                            </table>
-                         </div>`;
+                html += `</tbody></table></div>`;
             }
 
             qContainer.innerHTML = html;
-            
-            // Atur status tombol navigasi bawah
             document.getElementById('checkbox-ragu').checked = q.ragu;
             document.getElementById('btn-prev').disabled = index === 0;
             document.getElementById('btn-next').disabled = index === totalQuestions - 1;
-            
-            // Refresh grid untuk highlight border aktif
             questionsData.forEach((_, i) => updateGridBtnColor(document.getElementById(`grid-btn-${i}`), i));
         }
 
         function handleAnswer(type, val1, val2 = null) {
             const q = questionsData[currentIndex];
-            if (type === 'pg') { 
-                q.answer = val1; 
-                q.isAnswered = true; 
-            } 
+            if (type === 'pg') { q.answer = val1; q.isAnswered = true; } 
             else if (type === 'pgk') {
                 const idx = q.answer.indexOf(val1);
                 if (idx > -1) q.answer.splice(idx, 1);
@@ -263,7 +254,7 @@
                 q.isAnswered = Object.keys(q.answer).length > 0;
             }
             updateGridBtnColor(document.getElementById(`grid-btn-${currentIndex}`), currentIndex);
-            if(type === 'pg' || type === 'pgk') renderQuestion(currentIndex); // Rerender UI untuk efek border
+            if(type === 'pg' || type === 'pgk') renderQuestion(currentIndex); 
         }
 
         function navigate(step) {
@@ -307,8 +298,6 @@
         function handleFinish() {
             clearInterval(timerInterval);
             document.getElementById('lock-screen').classList.replace('hidden', 'flex');
-            
-            // Proses submit simulasi, kemudian hapus sesi dan logout
             setTimeout(() => {
                 localStorage.clear();
                 window.location.href = "index.html";
