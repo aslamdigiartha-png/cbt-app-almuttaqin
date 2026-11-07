@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CBT Admin Panel</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // PROTEKSI KHUSUS GURU & ADMIN
+        const role = localStorage.getItem('userRole');
+        if (localStorage.getItem('isLoggedIn') !== 'true' || (role !== 'guru' && role !== 'admin')) {
+            alert("Akses Ditolak! Khusus Staf Sekolah.");
+            window.location.href = "index.html";
+        }
+    </script>
+</head>
+<body class="bg-slate-50 flex h-screen font-sans">
+    
+    <aside class="w-64 bg-slate-900 text-white p-6 flex flex-col justify-between">
+        <div>
+            <h1 class="font-bold text-xl mb-8">CBT Panel Pro</h1>
+            <ul class="space-y-2">
+                <li class="p-2 bg-blue-600 rounded">Bank Soal</li>
+                <li class="p-2 hover:bg-slate-800 rounded">Data Siswa</li>
+            </ul>
+        </div>
+        <button onclick="logoutGuru()" class="bg-red-600 p-2 rounded w-full font-semibold">Keluar Sistem</button>
+    </aside>
+
+    <main class="flex-1 p-10">
+        <div class="bg-white p-6 rounded-xl shadow border mb-6 flex justify-between">
+            <h2 class="text-2xl font-bold text-slate-800">Manajemen Bank Soal</h2>
+            <div class="text-right">
+                <p class="font-bold text-blue-800" id="display-role">Memuat...</p>
+                <p class="text-sm text-gray-500" id="display-user">Memuat...</p>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const uRole = localStorage.getItem('userRole');
+        document.getElementById('display-role').innerText = uRole === 'admin' ? "Administrator Utama" : "Guru Mata Pelajaran";
+        document.getElementById('display-user').innerText = "ID: " + localStorage.getItem('userName').toUpperCase();
+
+        function logoutGuru() {
+            localStorage.clear();
+            window.location.href = "index.html";
+        }
+    </script>
+</body>
+</html>
