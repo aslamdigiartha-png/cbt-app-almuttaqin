@@ -3,41 +3,316 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ruang Ujian</title>
+    <title>CBT - Ruang Ujian Siswa</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-        // PROTEKSI KHUSUS SISWA
+        // PROTEKSI HALAMAN SISWA
         if (localStorage.getItem('isLoggedIn') !== 'true' || localStorage.getItem('userRole') !== 'siswa') {
-            alert("Akses Ditolak! Khusus Siswa.");
+            alert("Akses Ditolak! Anda harus login sebagai siswa terlebih dahulu.");
             window.location.href = "index.html";
         }
     </script>
+    <style>
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
 </head>
-<body class="bg-gray-200 h-screen flex flex-col font-sans">
-    <header class="bg-blue-800 text-white flex justify-between p-4 shadow-md">
-        <h1 class="font-bold text-lg">CBT ANBK - Siswa</h1>
-        <div class="flex gap-4 items-center">
-            <span id="display-nama" class="font-bold"></span>
-            <button onclick="logoutSiswa()" class="bg-red-600 px-4 py-1 rounded text-sm font-semibold">Selesai Ujian</button>
+<body class="bg-gray-200 h-screen flex flex-col font-sans overflow-hidden text-sm">
+
+    <!-- Header Ujian -->
+    <header class="bg-blue-800 text-white flex-shrink-0 z-10 shadow-md">
+        <div class="flex items-center justify-between px-4 py-3 border-b border-blue-700">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center text-blue-800 font-bold text-xs shadow-inner">LOGO</div>
+                <div>
+                    <h1 class="font-bold text-lg leading-tight">CBT ANBK SIMULATOR</h1>
+                    <p class="text-xs text-blue-200">Asesmen Akhir Jenjang</p>
+                </div>
+            </div>
+            <div class="hidden md:flex flex-col text-right">
+                <span class="font-bold text-base" id="display-nama">Peserta Ujian</span>
+                <span class="text-xs text-blue-200">SMP Islam Terpadu Al-Muttaqin</span>
+            </div>
+        </div>
+
+        <div class="flex items-center justify-between px-4 py-2 bg-blue-700">
+            <div class="font-semibold text-sm">Literasi Membaca</div>
+            <div class="flex items-center gap-4">
+                <div class="flex items-center bg-blue-900 px-3 py-1 rounded border border-blue-600 shadow-inner">
+                    <span class="text-xs mr-2 uppercase text-blue-300">Sisa Waktu:</span>
+                    <span id="timer" class="font-mono font-bold text-lg text-yellow-400">01:30:00</span>
+                </div>
+                <button onclick="finishExam()" class="bg-red-600 hover:bg-red-700 transition px-4 py-1.5 rounded font-semibold text-sm shadow">
+                    Selesai Ujian
+                </button>
+            </div>
         </div>
     </header>
 
-    <main class="flex-1 flex items-center justify-center">
-        <div class="bg-white p-10 rounded-xl shadow-xl text-center">
-            <h2 class="text-2xl font-bold mb-4">Ujian Sedang Berlangsung</h2>
-            <p class="text-gray-600 mb-8">Kerjakan soal dengan jujur dan teliti.</p>
-            <div class="animate-pulse w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto text-xl font-bold">...</div>
-        </div>
+    <!-- Ruang Pengerjaan -->
+    <main class="flex flex-1 flex-col lg:flex-row overflow-hidden relative">
+        
+        <!-- Kiri: Stimulus -->
+        <section class="lg:w-2/5 bg-white border-r border-gray-300 flex flex-col h-1/2 lg:h-full">
+            <div class="bg-gray-100 border-b border-gray-300 px-4 py-2 font-bold text-gray-700 sticky top-0">Informasi / Wacana</div>
+            <div id="stimulus-content" class="p-6 overflow-y-auto flex-1 text-gray-800 text-justify leading-relaxed"></div>
+        </section>
+
+        <!-- Tengah: Soal & Pilihan -->
+        <section class="lg:w-2/5 bg-blue-50 flex flex-col h-1/2 lg:h-full relative shadow-inner">
+            <div class="flex justify-between items-center bg-white border-b border-gray-300 px-4 py-2 font-bold text-gray-700 sticky top-0 shadow-sm z-10">
+                <span>Soal No. <span id="current-question-no" class="text-xl text-blue-700">1</span></span>
+            </div>
+            
+            <div id="question-content" class="p-6 overflow-y-auto flex-1 pb-24 text-gray-800"></div>
+
+            <!-- Navigasi Bawah -->
+            <div class="absolute bottom-0 left-0 w-full bg-white border-t border-gray-300 p-4 flex justify-between items-center z-10 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
+                <button id="btn-prev" onclick="navigate(-1)" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded shadow transition disabled:opacity-50">&larr; Sebelumnya</button>
+                <label class="flex items-center gap-2 bg-yellow-400 hover:bg-yellow-500 text-yellow-900 px-4 py-2 rounded shadow cursor-pointer font-semibold transition">
+                    <input type="checkbox" id="checkbox-ragu" onchange="toggleRagu(this)" class="w-4 h-4 accent-yellow-700"> Ragu-Ragu
+                </label>
+                <button id="btn-next" onclick="navigate(1)" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow transition">Berikutnya &rarr;</button>
+            </div>
+        </section>
+
+        <!-- Kanan: Sidebar Nomor Soal -->
+        <section class="lg:w-1/5 bg-white border-l border-gray-300 flex flex-col h-full z-20 shadow-[-4px_0_10px_-3px_rgba(0,0,0,0.1)]">
+            <div class="bg-gray-800 text-white px-4 py-2 font-bold text-center">Daftar Soal</div>
+            <div class="p-4 overflow-y-auto flex-1">
+                <div id="question-grid" class="grid grid-cols-5 gap-2"></div>
+            </div>
+            <div class="bg-gray-100 p-3 border-t text-xs border-gray-300 flex flex-col gap-2">
+                <div class="flex items-center gap-2"><div class="w-4 h-4 bg-green-500 rounded-sm"></div> Sudah Dijawab</div>
+                <div class="flex items-center gap-2"><div class="w-4 h-4 bg-yellow-400 rounded-sm"></div> Ragu-Ragu</div>
+                <div class="flex items-center gap-2"><div class="w-4 h-4 bg-white border border-gray-400 rounded-sm"></div> Belum Dijawab</div>
+            </div>
+        </section>
     </main>
 
-    <script>
-        document.getElementById('display-nama').innerText = "NISN: " + localStorage.getItem('userName').toUpperCase();
+    <!-- Overlay Loading Keluar -->
+    <div id="lock-screen" class="fixed inset-0 bg-black/90 z-50 hidden flex-col items-center justify-center text-white">
+        <h2 class="text-3xl font-bold mb-2">Ujian Selesai!</h2>
+        <p class="text-lg text-gray-300 mb-4">Menyimpan dan mengunggah jawaban ke server...</p>
+        <div class="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+    </div>
 
-        function logoutSiswa() {
-            if(confirm("Yakin ingin menyelesaikan ujian? Data akan disimpan.")) {
+    <script>
+        // Mengambil nama user dari penyimpanan sesi
+        const userNISN = localStorage.getItem('userName');
+        document.getElementById('display-nama').innerText = "NISN: " + (userNISN ? userNISN.toUpperCase() : "PESERTA");
+
+        // Database Dummy 40 Soal
+        const totalQuestions = 40;
+        const questionsData = [];
+
+        for (let i = 1; i <= totalQuestions; i++) {
+            let q = { id: i, ragu: false, isAnswered: false, answer: null };
+
+            if (i === 1) {
+                q.type = 'pg';
+                q.stimulus = `<h3 class="font-bold text-lg mb-2">Perubahan Iklim</h3><p>Aktivitas manusia telah menjadi pendorong utama perubahan iklim sejak abad ke-19, terutama akibat pembakaran bahan bakar fosil seperti batu bara, minyak, dan gas.</p>`;
+                q.questionText = "Berdasarkan teks di samping, apa pendorong utama perubahan iklim sejak tahun 1800-an?";
+                q.options = ['A. Siklus matahari', 'B. Pembakaran bahan bakar fosil', 'C. Reboisasi hutan', 'D. Pergeseran tektonik', 'E. Letusan gunung'];
+            } 
+            else if (i === 2) {
+                q.type = 'pg_kompleks';
+                q.answer = [];
+                q.stimulus = `<h3 class="font-bold text-lg mb-2">Ekosistem Laut</h3><p>Terumbu karang adalah salah satu ekosistem paling beragam di bumi. Polusi plastik dan penangkapan ikan berlebihan sangat mengancam keseimbangannya.</p>`;
+                q.questionText = "Pilihlah <strong>lebih dari satu</strong> pernyataan yang benar berdasarkan wacana!";
+                q.options = ['Terumbu karang memiliki keragaman ekosistem tinggi.', 'Semua spesies laut tahan terhadap polusi plastik.', 'Penangkapan ikan berlebihan mengancam terumbu karang.', 'Ekosistem laut hanya terdiri dari 1 spesies.'];
+            } 
+            else if (i === 3) {
+                q.type = 'menjodohkan';
+                q.answer = {}; 
+                q.stimulus = `<h3 class="font-bold text-lg mb-2">Penemuan Sejarah</h3><p>Mesin uap memicu revolusi industri di Eropa, sedangkan penemuan telepon mengubah cara manusia berkomunikasi dari jarak jauh.</p>`;
+                q.questionText = "Jodohkanlah penemuan berikut dengan dampaknya secara tepat!";
+                q.statements = ['Mesin Uap', 'Telepon', 'Internet'];
+                q.choices = ['Revolusi Industri', 'Komunikasi Jarak Jauh', 'Pertukaran Data Global'];
+            } 
+            else {
+                q.type = 'pg';
+                q.stimulus = `<p class="italic text-gray-500 text-center mt-10">Tidak ada stimulus untuk soal ini.</p>`;
+                q.questionText = `Ini adalah simulasi pertanyaan pilihan ganda biasa untuk soal nomor ${i}.`;
+                q.options = ['Opsi Jawaban A', 'Opsi Jawaban B', 'Opsi Jawaban C', 'Opsi Jawaban D', 'Opsi Jawaban E'];
+            }
+            questionsData.push(q);
+        }
+
+        let currentIndex = 0;
+        let timerSeconds = 90 * 60; // 90 Menit
+        let timerInterval;
+
+        document.addEventListener("DOMContentLoaded", () => {
+            renderGrid();
+            renderQuestion(currentIndex);
+            startTimer();
+        });
+
+        function renderGrid() {
+            const gridContainer = document.getElementById('question-grid');
+            gridContainer.innerHTML = '';
+            questionsData.forEach((q, index) => {
+                const btn = document.createElement('button');
+                btn.id = `grid-btn-${index}`;
+                btn.innerText = q.id;
+                btn.onclick = () => goToQuestion(index);
+                btn.className = `w-10 h-10 flex items-center justify-center font-semibold rounded text-sm transition shadow-sm border`;
+                updateGridBtnColor(btn, index);
+                gridContainer.appendChild(btn);
+            });
+        }
+
+        function updateGridBtnColor(btnNode, index) {
+            const q = questionsData[index];
+            btnNode.classList.remove('bg-white', 'text-gray-700', 'bg-green-500', 'text-white', 'bg-yellow-400', 'border-gray-300', 'border-blue-700', 'border-2', 'ring-2', 'ring-blue-300');
+
+            if (q.ragu) btnNode.classList.add('bg-yellow-400', 'text-white', 'border-yellow-500');
+            else if (q.isAnswered) btnNode.classList.add('bg-green-500', 'text-white', 'border-green-600');
+            else btnNode.classList.add('bg-white', 'text-gray-700', 'border-gray-300');
+
+            if (index === currentIndex) btnNode.classList.add('border-2', 'border-blue-700', 'ring-2', 'ring-blue-300', 'scale-110');
+            else btnNode.classList.add('border');
+        }
+
+        function renderQuestion(index) {
+            const q = questionsData[index];
+            document.getElementById('current-question-no').innerText = q.id;
+            document.getElementById('stimulus-content').innerHTML = q.stimulus;
+            
+            const qContainer = document.getElementById('question-content');
+            let html = `<p class="font-medium text-lg mb-5">${q.questionText}</p>`;
+
+            if (q.type === 'pg') {
+                html += `<div class="flex flex-col gap-3">`;
+                q.options.forEach((opt, i) => {
+                    const isChecked = q.answer === i ? 'checked' : '';
+                    html += `
+                    <label class="flex items-start p-3 border border-gray-300 rounded-lg cursor-pointer hover:bg-blue-100 transition ${isChecked ? 'bg-blue-50 border-blue-400' : 'bg-white'}">
+                        <input type="radio" name="pg_${q.id}" value="${i}" onchange="handleAnswer('pg', ${i})" class="mt-1 mr-3 w-4 h-4 accent-blue-600" ${isChecked}>
+                        <span>${opt}</span>
+                    </label>`;
+                });
+                html += `</div>`;
+            } 
+            else if (q.type === 'pg_kompleks') {
+                html += `<div class="flex flex-col gap-3">`;
+                q.options.forEach((opt, i) => {
+                    const isChecked = q.answer.includes(i) ? 'checked' : '';
+                    html += `
+                    <label class="flex items-start p-3 border border-gray-300 rounded-lg cursor-pointer hover:bg-blue-100 transition ${isChecked ? 'bg-blue-50 border-blue-400' : 'bg-white'}">
+                        <input type="checkbox" name="pgk_${q.id}" value="${i}" onchange="handleAnswer('pgk', ${i})" class="mt-1 mr-3 w-5 h-5 accent-blue-600" ${isChecked}>
+                        <span>${opt}</span>
+                    </label>`;
+                });
+                html += `</div>`;
+            }
+            else if (q.type === 'menjodohkan') {
+                html += `<div class="overflow-x-auto border border-gray-300 rounded-lg shadow-sm">
+                            <table class="w-full text-center bg-white border-collapse">
+                                <thead>
+                                    <tr class="bg-gray-100 border-b border-gray-300 text-sm">
+                                        <th class="p-3 border-r border-gray-300 text-left w-1/2">Pernyataan</th>`;
+                q.choices.forEach(choice => html += `<th class="p-2 border-r border-gray-300">${choice}</th>`);
+                html += `           </tr>
+                                </thead>
+                                <tbody>`;
+                q.statements.forEach((stmt, sIdx) => {
+                    html += `<tr class="border-b border-gray-200 hover:bg-gray-50 transition">
+                                <td class="p-3 border-r border-gray-300 text-left text-sm font-medium">${stmt}</td>`;
+                    q.choices.forEach((_, cIdx) => {
+                        const isChecked = q.answer[sIdx] === cIdx ? 'checked' : '';
+                        html += `<td class="p-3 border-r border-gray-300">
+                                    <input type="radio" name="jodoh_${sIdx}" onchange="handleAnswer('jodoh', ${sIdx}, ${cIdx})" class="w-5 h-5 accent-blue-600 cursor-pointer" ${isChecked}>
+                                 </td>`;
+                    });
+                    html += `</tr>`;
+                });
+                html += `       </tbody>
+                            </table>
+                         </div>`;
+            }
+
+            qContainer.innerHTML = html;
+            
+            // Atur status tombol navigasi bawah
+            document.getElementById('checkbox-ragu').checked = q.ragu;
+            document.getElementById('btn-prev').disabled = index === 0;
+            document.getElementById('btn-next').disabled = index === totalQuestions - 1;
+            
+            // Refresh grid untuk highlight border aktif
+            questionsData.forEach((_, i) => updateGridBtnColor(document.getElementById(`grid-btn-${i}`), i));
+        }
+
+        function handleAnswer(type, val1, val2 = null) {
+            const q = questionsData[currentIndex];
+            if (type === 'pg') { 
+                q.answer = val1; 
+                q.isAnswered = true; 
+            } 
+            else if (type === 'pgk') {
+                const idx = q.answer.indexOf(val1);
+                if (idx > -1) q.answer.splice(idx, 1);
+                else q.answer.push(val1);
+                q.isAnswered = q.answer.length > 0;
+            }
+            else if (type === 'jodoh') {
+                q.answer[val1] = val2; 
+                q.isAnswered = Object.keys(q.answer).length > 0;
+            }
+            updateGridBtnColor(document.getElementById(`grid-btn-${currentIndex}`), currentIndex);
+            if(type === 'pg' || type === 'pgk') renderQuestion(currentIndex); // Rerender UI untuk efek border
+        }
+
+        function navigate(step) {
+            const newIndex = currentIndex + step;
+            if (newIndex >= 0 && newIndex < totalQuestions) goToQuestion(newIndex);
+        }
+
+        function goToQuestion(index) {
+            currentIndex = index;
+            renderQuestion(currentIndex);
+        }
+
+        function toggleRagu(checkbox) {
+            questionsData[currentIndex].ragu = checkbox.checked;
+            updateGridBtnColor(document.getElementById(`grid-btn-${currentIndex}`), currentIndex);
+        }
+
+        function startTimer() {
+            const timerEl = document.getElementById('timer');
+            timerInterval = setInterval(() => {
+                timerSeconds--;
+                let h = Math.floor(timerSeconds / 3600);
+                let m = Math.floor((timerSeconds % 3600) / 60);
+                let s = timerSeconds % 60;
+                timerEl.innerText = `${h < 10 ? '0'+h : h}:${m < 10 ? '0'+m : m}:${s < 10 ? '0'+s : s}`;
+                
+                if(timerSeconds < 300) { 
+                    timerEl.classList.replace('text-yellow-400', 'text-red-500'); 
+                    timerEl.classList.add('animate-pulse'); 
+                }
+                if (timerSeconds <= 0) handleFinish();
+            }, 1000);
+        }
+
+        function finishExam() {
+            if(confirm("Apakah Anda yakin ingin menyelesaikan ujian? Jawaban tidak dapat diubah lagi.")) {
+                handleFinish();
+            }
+        }
+
+        function handleFinish() {
+            clearInterval(timerInterval);
+            document.getElementById('lock-screen').classList.replace('hidden', 'flex');
+            
+            // Proses submit simulasi, kemudian hapus sesi dan logout
+            setTimeout(() => {
                 localStorage.clear();
                 window.location.href = "index.html";
-            }
+            }, 2500);
         }
     </script>
 </body>
