@@ -5,192 +5,268 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CBT - Ruang Ujian Siswa</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script>
         // PROTEKSI HALAMAN SISWA
         if (localStorage.getItem('isLoggedIn') !== 'true' || localStorage.getItem('userRole') !== 'siswa') {
             alert("Akses Ditolak! Anda harus login sebagai siswa terlebih dahulu.");
             window.location.href = "index.html";
         }
-        // 1. Blokir Klik Kanan (Mencegah Inspect Element / Copy)
-document.addEventListener('contextmenu', event => event.preventDefault());
-
-// 2. Blokir Shortcut Keyboard (Ctrl+C, Ctrl+V, F12)
-document.addEventListener('keydown', function(e) {
-    if (e.key === 'F12' || (e.ctrlKey && ['c', 'v', 'x', 'p', 's', 'u'].includes(e.key.toLowerCase()))) {
-        e.preventDefault();
-    }
-});
-
-// 3. Deteksi Pindah Tab (Siswa mencoba Googling)
-document.addEventListener("visibilitychange", () => {
-    if (document.hidden) {
-        // Kirim peringatan ke Database (Dashboard Guru) bahwa siswa ini pindah tab
-        alert("PERINGATAN! Anda terdeteksi keluar dari layar ujian. Pelanggaran telah dicatat oleh sistem proktor.");
-        // Opsi ekstrem: paksa submit (finishExam) jika melakukan pelanggaran > 3 kali
-    }
-});
     </script>
     <style>
         ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .token-input { letter-spacing: 0.5em; text-transform: uppercase; }
     </style>
 </head>
-<body class="bg-gray-200 h-screen flex flex-col font-sans overflow-hidden text-sm">
+<body class="bg-slate-100 h-screen font-sans overflow-hidden text-sm relative">
 
-    <!-- Header Ujian -->
-    <header class="bg-blue-800 text-white flex-shrink-0 z-10 shadow-md">
-        <div class="flex items-center justify-between px-4 py-3 border-b border-blue-700">
-            <div class="flex items-center gap-3">
-                <img id="logo-sekolah" src="https://via.placeholder.com/150/FFFFFF/000000/?text=CBT" class="w-10 h-10 bg-white rounded-full object-cover shadow-inner">
-                <div>
-                    <h1 class="font-bold text-lg leading-tight" id="nama-sekolah-header">CBT ANBK SIMULATOR</h1>
-                    <p class="text-xs text-blue-200">Asesmen Akhir Jenjang</p>
+    <!-- ========================================== -->
+    <!-- 1. HALAMAN KONFIRMASI DATA & INPUT TOKEN -->
+    <!-- ========================================== -->
+    <div id="view-konfirmasi" class="absolute inset-0 z-40 flex items-center justify-center p-4 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] bg-slate-100">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl flex flex-col md:flex-row overflow-hidden border border-slate-200">
+            
+            <!-- Panel Kiri: Data Peserta -->
+            <div class="md:w-1/2 bg-blue-800 text-white p-8 lg:p-10 relative overflow-hidden flex flex-col justify-center">
+                <div class="relative z-10">
+                    <h2 class="text-2xl font-bold mb-6 flex items-center"><i class="fa-solid fa-id-card mr-3"></i> Konfirmasi Data</h2>
+                    <table class="w-full text-base font-medium">
+                        <tr><td class="py-3 opacity-80 w-1/3">NISN</td><td class="py-3">: <span id="konf-nisn" class="font-bold"></span></td></tr>
+                        <tr><td class="py-3 opacity-80">Nama Peserta</td><td class="py-3">: <span id="konf-nama" class="font-bold"></span></td></tr>
+                        <tr><td class="py-3 opacity-80">Ujian Aktif</td><td class="py-3">: <span id="konf-mapel" class="font-bold text-yellow-300">Mengambil jadwal...</span></td></tr>
+                    </table>
                 </div>
+                <!-- Dekorasi -->
+                <div class="absolute -bottom-10 -right-10 w-48 h-48 bg-blue-600 rounded-full mix-blend-multiply filter blur-2xl opacity-50"></div>
             </div>
-            <div class="hidden md:flex flex-col text-right">
-                <span class="font-bold text-base" id="display-nama">Peserta Ujian</span>
-                <span class="text-xs text-blue-200" id="nama-sekolah-sub">SMP Islam Terpadu Al-Muttaqin</span>
-            </div>
-        </div>
 
-        <div class="flex items-center justify-between px-4 py-2 bg-blue-700">
-            <div class="font-semibold text-sm">Mata Pelajaran: <span id="display-mapel" class="text-yellow-300">Memuat...</span></div>
-            <div class="flex items-center gap-4">
-                <div class="flex items-center bg-blue-900 px-3 py-1 rounded border border-blue-600 shadow-inner">
-                    <span class="text-xs mr-2 uppercase text-blue-300">Sisa Waktu:</span>
-                    <span id="timer" class="font-mono font-bold text-lg text-yellow-400">01:30:00</span>
+            <!-- Panel Kanan: Input Token -->
+            <div class="md:w-1/2 p-8 lg:p-10 flex flex-col justify-center bg-white text-center">
+                <div class="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-2xl mx-auto mb-4 shadow-inner">
+                    <i class="fa-solid fa-key"></i>
                 </div>
-                <button onclick="finishExam()" class="bg-red-600 hover:bg-red-700 transition px-4 py-1.5 rounded font-semibold text-sm shadow">
-                    Selesai Ujian
+                <h3 class="text-xl font-bold text-slate-800 mb-2">Masukkan Token</h3>
+                <p class="text-sm text-slate-500 mb-8">Ketik token ujian yang diberikan oleh Proktor/Pengawas untuk memulai sesi ini.</p>
+                
+                <input type="text" id="input-token" class="w-full p-4 border-2 border-slate-300 rounded-xl text-center text-2xl font-mono font-bold token-input focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 outline-none transition mb-6" placeholder="XXXXXX" maxlength="6" autocomplete="off">
+                
+                <button onclick="validasiToken()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl shadow-lg transition text-lg flex items-center justify-center">
+                    Mulai Kerjakan <i class="fa-solid fa-arrow-right ml-2"></i>
                 </button>
             </div>
         </div>
-    </header>
+    </div>
 
-    <!-- Ruang Pengerjaan -->
-    <main class="flex flex-1 flex-col lg:flex-row overflow-hidden relative">
-        <section class="lg:w-2/5 bg-white border-r border-gray-300 flex flex-col h-1/2 lg:h-full">
-            <div class="bg-gray-100 border-b border-gray-300 px-4 py-2 font-bold text-gray-700 sticky top-0">Informasi / Wacana</div>
-            <div id="stimulus-content" class="p-6 overflow-y-auto flex-1 text-gray-800 text-justify leading-relaxed"></div>
-        </section>
 
-        <section class="lg:w-2/5 bg-blue-50 flex flex-col h-1/2 lg:h-full relative shadow-inner">
-            <div class="flex justify-between items-center bg-white border-b border-gray-300 px-4 py-2 font-bold text-gray-700 sticky top-0 shadow-sm z-10">
-                <span>Soal No. <span id="current-question-no" class="text-xl text-blue-700">1</span></span>
+    <!-- ========================================== -->
+    <!-- 2. RUANG UJIAN (Tersembunyi Sebelum Token Valid) -->
+    <!-- ========================================== -->
+    <div id="view-ujian" class="hidden flex-col h-full w-full">
+        <!-- Header Ujian -->
+        <header class="bg-blue-800 text-white flex-shrink-0 z-10 shadow-md">
+            <div class="flex items-center justify-between px-4 py-3 border-b border-blue-700">
+                <div class="flex items-center gap-3">
+                    <img id="logo-sekolah" src="https://via.placeholder.com/150/FFFFFF/000000/?text=CBT" class="w-10 h-10 bg-white rounded-full object-cover shadow-inner">
+                    <div>
+                        <h1 class="font-bold text-lg leading-tight" id="nama-sekolah-header">CBT ANBK SIMULATOR</h1>
+                        <p class="text-xs text-blue-200">Asesmen Akhir Jenjang</p>
+                    </div>
+                </div>
+                <div class="hidden md:flex flex-col text-right">
+                    <span class="font-bold text-base" id="display-nama">Peserta Ujian</span>
+                    <span class="text-xs text-blue-200" id="nama-sekolah-sub">SMP Islam Terpadu Al-Muttaqin</span>
+                </div>
             </div>
-            
-            <div id="question-content" class="p-6 overflow-y-auto flex-1 pb-24 text-gray-800"></div>
 
-            <div class="absolute bottom-0 left-0 w-full bg-white border-t border-gray-300 p-4 flex justify-between items-center z-10 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
-                <button id="btn-prev" onclick="navigate(-1)" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded shadow transition disabled:opacity-50">&larr; Sebelumnya</button>
-                <label class="flex items-center gap-2 bg-yellow-400 hover:bg-yellow-500 text-yellow-900 px-4 py-2 rounded shadow cursor-pointer font-semibold transition">
-                    <input type="checkbox" id="checkbox-ragu" onchange="toggleRagu(this)" class="w-4 h-4 accent-yellow-700"> Ragu-Ragu
-                </label>
-                <button id="btn-next" onclick="navigate(1)" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow transition">Berikutnya &rarr;</button>
+            <div class="flex items-center justify-between px-4 py-2 bg-blue-700">
+                <div class="font-semibold text-sm">Mata Pelajaran: <span id="display-mapel" class="text-yellow-300">Memuat...</span></div>
+                <div class="flex items-center gap-4">
+                    <div class="flex items-center bg-blue-900 px-3 py-1 rounded border border-blue-600 shadow-inner">
+                        <span class="text-xs mr-2 uppercase text-blue-300">Sisa Waktu:</span>
+                        <span id="timer" class="font-mono font-bold text-lg text-yellow-400">00:00:00</span>
+                    </div>
+                    <button onclick="finishExam()" class="bg-red-600 hover:bg-red-700 transition px-4 py-1.5 rounded font-semibold text-sm shadow">
+                        Selesai Ujian
+                    </button>
+                </div>
             </div>
-        </section>
+        </header>
 
-        <section class="lg:w-1/5 bg-white border-l border-gray-300 flex flex-col h-full z-20 shadow-[-4px_0_10px_-3px_rgba(0,0,0,0.1)]">
-            <div class="bg-gray-800 text-white px-4 py-2 font-bold text-center">Daftar Soal</div>
-            <div class="p-4 overflow-y-auto flex-1">
-                <div id="question-grid" class="grid grid-cols-5 gap-2"></div>
-            </div>
-            <div class="bg-gray-100 p-3 border-t text-xs border-gray-300 flex flex-col gap-2">
-                <div class="flex items-center gap-2"><div class="w-4 h-4 bg-green-500 rounded-sm"></div> Sudah Dijawab</div>
-                <div class="flex items-center gap-2"><div class="w-4 h-4 bg-yellow-400 rounded-sm"></div> Ragu-Ragu</div>
-                <div class="flex items-center gap-2"><div class="w-4 h-4 bg-white border border-gray-400 rounded-sm"></div> Belum Dijawab</div>
-            </div>
-        </section>
-    </main>
+        <!-- Ruang Pengerjaan -->
+        <main class="flex flex-1 flex-col lg:flex-row overflow-hidden relative">
+            <section class="lg:w-2/5 bg-white border-r border-gray-300 flex flex-col h-1/2 lg:h-full">
+                <div class="bg-gray-100 border-b border-gray-300 px-4 py-2 font-bold text-gray-700 sticky top-0">Informasi / Wacana</div>
+                <div id="stimulus-content" class="p-6 overflow-y-auto flex-1 text-gray-800 text-justify leading-relaxed"></div>
+            </section>
 
+            <section class="lg:w-2/5 bg-blue-50 flex flex-col h-1/2 lg:h-full relative shadow-inner">
+                <div class="flex justify-between items-center bg-white border-b border-gray-300 px-4 py-2 font-bold text-gray-700 sticky top-0 shadow-sm z-10">
+                    <span>Soal No. <span id="current-question-no" class="text-xl text-blue-700">1</span></span>
+                </div>
+                
+                <div id="question-content" class="p-6 overflow-y-auto flex-1 pb-24 text-gray-800"></div>
+
+                <div class="absolute bottom-0 left-0 w-full bg-white border-t border-gray-300 p-4 flex justify-between items-center z-10 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
+                    <button id="btn-prev" onclick="navigate(-1)" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded shadow transition disabled:opacity-50">&larr; Sebelumnya</button>
+                    <label class="flex items-center gap-2 bg-yellow-400 hover:bg-yellow-500 text-yellow-900 px-4 py-2 rounded shadow cursor-pointer font-semibold transition">
+                        <input type="checkbox" id="checkbox-ragu" onchange="toggleRagu(this)" class="w-4 h-4 accent-yellow-700"> Ragu-Ragu
+                    </label>
+                    <button id="btn-next" onclick="navigate(1)" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow transition">Berikutnya &rarr;</button>
+                </div>
+            </section>
+
+            <section class="lg:w-1/5 bg-white border-l border-gray-300 flex flex-col h-full z-20 shadow-[-4px_0_10px_-3px_rgba(0,0,0,0.1)]">
+                <div class="bg-gray-800 text-white px-4 py-2 font-bold text-center">Daftar Soal</div>
+                <div class="p-4 overflow-y-auto flex-1">
+                    <div id="question-grid" class="grid grid-cols-5 gap-2"></div>
+                </div>
+                <div class="bg-gray-100 p-3 border-t text-xs border-gray-300 flex flex-col gap-2">
+                    <div class="flex items-center gap-2"><div class="w-4 h-4 bg-green-500 rounded-sm"></div> Sudah Dijawab</div>
+                    <div class="flex items-center gap-2"><div class="w-4 h-4 bg-yellow-400 rounded-sm"></div> Ragu-Ragu</div>
+                    <div class="flex items-center gap-2"><div class="w-4 h-4 bg-white border border-gray-400 rounded-sm"></div> Belum Dijawab</div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Lock Screen Keluar -->
     <div id="lock-screen" class="fixed inset-0 bg-black/90 z-50 hidden flex-col items-center justify-center text-white">
         <h2 class="text-3xl font-bold mb-2">Ujian Selesai!</h2>
         <p class="text-lg text-gray-300 mb-4">Menyimpan dan mengunggah jawaban ke server...</p>
         <div class="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
     </div>
 
+    <!-- ========================================== -->
+    <!-- LOGIKA JAVASCRIPT -->
+    <!-- ========================================== -->
     <script>
-        // 1. MUAT IDENTITAS SEKOLAH & SISWA
-        const userNISN = localStorage.getItem('userName');
+        // 1. MUAT IDENTITAS & JADWAL
+        const userNISN = localStorage.getItem('userName') || "PESERTA";
+        const userNamaLengkap = localStorage.getItem('userRealName') || "Nama Peserta"; // Jika dari Firebase
         const schoolName = localStorage.getItem('schoolName') || 'SMP Islam Terpadu Al-Muttaqin';
         const schoolLogo = localStorage.getItem('schoolLogo');
-        const mapelAktif = localStorage.getItem('mapelUjian') || 'Ilmu Pengetahuan Alam (IPA)'; // Simulasi Mapel
+        
+        // Ambil jadwal aktif dari localStorage
+        const jadwalDB = JSON.parse(localStorage.getItem('db_jadwal')) || [];
+        let jadwalAktifSiswa = null;
 
-        document.getElementById('display-nama').innerText = "NISN: " + (userNISN ? userNISN.toUpperCase() : "PESERTA");
-        document.getElementById('nama-sekolah-header').innerText = schoolName.toUpperCase();
-        document.getElementById('nama-sekolah-sub').innerText = schoolName;
-        document.getElementById('display-mapel').innerText = mapelAktif;
-        if(schoolLogo) document.getElementById('logo-sekolah').src = schoolLogo;
+        document.addEventListener("DOMContentLoaded", () => {
+            // Tampilkan Data di Halaman Konfirmasi
+            document.getElementById('konf-nisn').innerText = userNISN.toUpperCase();
+            document.getElementById('konf-nama').innerText = userNamaLengkap;
+            
+            if(jadwalDB.length > 0) {
+                jadwalAktifSiswa = jadwalDB[jadwalDB.length - 1]; // Ambil jadwal yang paling terakhir dibuat
+                document.getElementById('konf-mapel').innerText = jadwalAktifSiswa.mapel;
+            } else {
+                document.getElementById('konf-mapel').innerText = "Belum Ada Jadwal Ujian";
+            }
 
-        // 2. DATABASE SOAL (SIMULASI 40 SOAL)
+            // Tampilkan Identitas di Header Ujian
+            document.getElementById('display-nama').innerText = "NISN: " + userNISN.toUpperCase();
+            document.getElementById('nama-sekolah-header').innerText = schoolName.toUpperCase();
+            document.getElementById('nama-sekolah-sub').innerText = schoolName;
+            if(schoolLogo) document.getElementById('logo-sekolah').src = schoolLogo;
+        });
+
+        // 2. FUNGSI VALIDASI TOKEN (GERBANG UJIAN)
+        let timerSeconds = 0;
+        let timerInterval;
+
+        function validasiToken() {
+            const tokenInput = document.getElementById('input-token').value.toUpperCase().trim();
+            
+            // Validasi jika jadwal tidak ada
+            if(jadwalDB.length === 0 && tokenInput !== "BYPASS") {
+                alert("Belum ada jadwal ujian yang diaktifkan oleh Guru. Silakan hubungi Proktor.");
+                return;
+            }
+
+            // Cek kecocokan token
+            let tokenValid = false;
+            if (jadwalAktifSiswa && tokenInput === jadwalAktifSiswa.token) {
+                tokenValid = true;
+            } else if (tokenInput === "BYPASS") { 
+                // Kode rahasia (opsional) untuk keperluan testing Anda
+                tokenValid = true; 
+            }
+
+            if (tokenValid) {
+                // Sembunyikan konfirmasi, Tampilkan layar ujian
+                document.getElementById('view-konfirmasi').style.display = 'none';
+                document.getElementById('view-ujian').classList.remove('hidden');
+                document.getElementById('view-ujian').classList.add('flex');
+                
+                // Set Header Mapel
+                document.getElementById('display-mapel').innerText = jadwalAktifSiswa ? jadwalAktifSiswa.mapel : "Mode Testing";
+                
+                // Set Waktu Timer
+                let durasiMenit = jadwalAktifSiswa ? parseInt(jadwalAktifSiswa.durasi) : 90;
+                timerSeconds = durasiMenit * 60;
+
+                // Render Soal dan Jalankan Timer
+                renderGrid();
+                renderQuestion(currentIndex);
+                startTimer();
+            } else {
+                alert("TOKEN SALAH ATAU KADALUARSA! Silakan periksa kembali ketikan Anda.");
+                document.getElementById('input-token').value = "";
+                document.getElementById('input-token').focus();
+            }
+        }
+
+        // 3. DATABASE SOAL (SIMULASI 40 SOAL) & PENGACAKAN
         const totalQuestions = 40;
         let questionsData = [];
 
         for (let i = 1; i <= totalQuestions; i++) {
-            let q = { id_asli: i, ragu: false, isAnswered: false, answer: null }; // Gunakan id_asli agar tidak tertukar saat diacak
+            let q = { id_asli: i, ragu: false, isAnswered: false, answer: null };
 
             if (i === 1) {
                 q.type = 'pg';
                 q.stimulus = `<h3 class="font-bold text-lg mb-2">Perubahan Iklim</h3><p>Aktivitas manusia telah menjadi pendorong utama...</p>`;
-                q.questionText = "Berdasarkan teks di samping, apa pendorong utama perubahan iklim sejak tahun 1800-an?";
-                q.options = ['A. Siklus matahari', 'B. Pembakaran fosil', 'C. Reboisasi hutan', 'D. Pergeseran tektonik', 'E. Letusan gunung'];
+                q.questionText = "Berdasarkan teks di samping, apa pendorong utama perubahan iklim sejak abad ke-19?";
+                q.options = ['A. Siklus matahari', 'B. Pembakaran fosil', 'C. Reboisasi hutan', 'D. Pergeseran tektonik'];
             } 
             else if (i === 2) {
                 q.type = 'pg_kompleks';
                 q.answer = [];
                 q.stimulus = `<h3 class="font-bold text-lg mb-2">Ekosistem Laut</h3><p>Terumbu karang adalah salah satu ekosistem paling beragam...</p>`;
-                q.questionText = "Pilihlah <strong>lebih dari satu</strong> pernyataan yang benar berdasarkan wacana!";
+                q.questionText = "Pilihlah <strong>lebih dari satu</strong> pernyataan yang benar!";
                 q.options = ['Terumbu karang beragam.', 'Semua spesies tahan polusi.', 'Penangkapan ikan berlebihan mengancam.', 'Ekosistem laut 1 spesies.'];
             } 
             else if (i === 3) {
-                q.type = 'menjodohkan';
-                q.answer = {}; 
-                q.stimulus = `<h3 class="font-bold text-lg mb-2">Penemuan Sejarah</h3><p>Mesin uap memicu revolusi industri di Eropa...</p>`;
-                q.questionText = "Jodohkanlah penemuan berikut dengan dampaknya secara tepat!";
-                q.statements = ['Mesin Uap', 'Telepon'];
-                q.choices = ['Revolusi Industri', 'Komunikasi Jarak Jauh'];
-            } 
+                q.type = 'isian';
+                q.stimulus = `<p class="italic text-gray-500">Soal Isian Singkat</p>`;
+                q.questionText = "Tahun berapakah Indonesia merdeka?";
+            }
             else {
                 q.type = 'pg';
-                q.stimulus = `<p class="italic text-gray-500 text-center mt-10">Tidak ada stimulus untuk soal ini.</p>`;
-                q.questionText = `Ini adalah simulasi pertanyaan pilihan ganda untuk ID soal asli ${i}.`;
+                q.stimulus = `<p class="italic text-gray-500 text-center mt-10">Tidak ada stimulus.</p>`;
+                q.questionText = `Ini adalah simulasi pertanyaan pilihan ganda untuk ID asli ${i}.`;
                 q.options = ['Opsi A', 'Opsi B', 'Opsi C', 'Opsi D', 'Opsi E'];
             }
             questionsData.push(q);
         }
 
-        // 3. ALGORITMA PENGACAKAN SOAL (Fisher-Yates Shuffle)
-        // Fungsi ini akan mengacak posisi elemen di dalam array questionsData
-        function shuffleArray(array) {
-            for (let i = array.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [array[i], array[j]] = [array[j], array[i]];
-            }
+        // Acak Soal (Fisher-Yates)
+        for (let i = questionsData.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [questionsData[i], questionsData[j]] = [questionsData[j], questionsData[i]];
         }
-        
-        // Panggil fungsi acak SETELAH soal dimuat, TAPI SEBELUM dirender ke layar
-        shuffleArray(questionsData); 
 
-        // 4. LOGIKA APLIKASI
         let currentIndex = 0;
-        let timerSeconds = 90 * 60; // 90 Menit
-        let timerInterval;
 
-        document.addEventListener("DOMContentLoaded", () => {
-            renderGrid();
-            renderQuestion(currentIndex);
-            startTimer();
-        });
-
+        // 4. RENDER UI UJIAN
         function renderGrid() {
             const gridContainer = document.getElementById('question-grid');
             gridContainer.innerHTML = '';
             questionsData.forEach((q, index) => {
                 const btn = document.createElement('button');
                 btn.id = `grid-btn-${index}`;
-                // TAMPILAN NOMOR DI GRID SELALU BERURUT (1-40) MESKIPUN SOALNYA ACAK
                 btn.innerText = index + 1; 
                 btn.onclick = () => goToQuestion(index);
                 btn.className = `w-10 h-10 flex items-center justify-center font-semibold rounded text-sm transition shadow-sm border`;
@@ -213,7 +289,6 @@ document.addEventListener("visibilitychange", () => {
 
         function renderQuestion(index) {
             const q = questionsData[index];
-            // Tampilkan nomor soal berurut (1-40) bukan ID aslinya
             document.getElementById('current-question-no').innerText = index + 1;
             document.getElementById('stimulus-content').innerHTML = q.stimulus;
             
@@ -231,24 +306,14 @@ document.addEventListener("visibilitychange", () => {
             else if (q.type === 'pg_kompleks') {
                 html += `<div class="flex flex-col gap-3">`;
                 q.options.forEach((opt, i) => {
-                    const isChecked = q.answer.includes(i) ? 'checked' : '';
+                    const isChecked = (q.answer && q.answer.includes(i)) ? 'checked' : '';
                     html += `<label class="flex items-start p-3 border border-gray-300 rounded-lg cursor-pointer hover:bg-blue-100 transition ${isChecked ? 'bg-blue-50 border-blue-400' : 'bg-white'}"><input type="checkbox" name="pgk_${q.id_asli}" value="${i}" onchange="handleAnswer('pgk', ${i})" class="mt-1 mr-3 w-5 h-5 accent-blue-600" ${isChecked}><span>${opt}</span></label>`;
                 });
                 html += `</div>`;
             }
-            else if (q.type === 'menjodohkan') {
-                html += `<div class="overflow-x-auto border border-gray-300 rounded-lg shadow-sm"><table class="w-full text-center bg-white border-collapse"><thead><tr class="bg-gray-100 border-b border-gray-300 text-sm"><th class="p-3 border-r border-gray-300 text-left w-1/2">Pernyataan</th>`;
-                q.choices.forEach(choice => html += `<th class="p-2 border-r border-gray-300">${choice}</th>`);
-                html += `</tr></thead><tbody>`;
-                q.statements.forEach((stmt, sIdx) => {
-                    html += `<tr class="border-b border-gray-200 hover:bg-gray-50 transition"><td class="p-3 border-r border-gray-300 text-left text-sm font-medium">${stmt}</td>`;
-                    q.choices.forEach((_, cIdx) => {
-                        const isChecked = q.answer[sIdx] === cIdx ? 'checked' : '';
-                        html += `<td class="p-3 border-r border-gray-300"><input type="radio" name="jodoh_${q.id_asli}_${sIdx}" onchange="handleAnswer('jodoh', ${sIdx}, ${cIdx})" class="w-5 h-5 accent-blue-600 cursor-pointer" ${isChecked}></td>`;
-                    });
-                    html += `</tr>`;
-                });
-                html += `</tbody></table></div>`;
+            else if (q.type === 'isian') {
+                const valIsian = q.answer || '';
+                html += `<input type="text" value="${valIsian}" onkeyup="handleAnswer('isian', this.value)" class="w-full p-4 border-2 border-slate-300 rounded-lg text-lg font-bold focus:border-blue-500 outline-none" placeholder="Ketik jawaban Anda di sini...">`;
             }
 
             qContainer.innerHTML = html;
@@ -258,18 +323,19 @@ document.addEventListener("visibilitychange", () => {
             questionsData.forEach((_, i) => updateGridBtnColor(document.getElementById(`grid-btn-${i}`), i));
         }
 
-        function handleAnswer(type, val1, val2 = null) {
+        function handleAnswer(type, val1) {
             const q = questionsData[currentIndex];
             if (type === 'pg') { q.answer = val1; q.isAnswered = true; } 
             else if (type === 'pgk') {
+                if(!q.answer) q.answer = [];
                 const idx = q.answer.indexOf(val1);
                 if (idx > -1) q.answer.splice(idx, 1);
                 else q.answer.push(val1);
                 q.isAnswered = q.answer.length > 0;
             }
-            else if (type === 'jodoh') {
-                q.answer[val1] = val2; 
-                q.isAnswered = Object.keys(q.answer).length > 0;
+            else if (type === 'isian') {
+                q.answer = val1;
+                q.isAnswered = val1.trim().length > 0;
             }
             updateGridBtnColor(document.getElementById(`grid-btn-${currentIndex}`), currentIndex);
             if(type === 'pg' || type === 'pgk') renderQuestion(currentIndex); 
@@ -290,6 +356,7 @@ document.addEventListener("visibilitychange", () => {
             updateGridBtnColor(document.getElementById(`grid-btn-${currentIndex}`), currentIndex);
         }
 
+        // 5. TIMER & SELESAI
         function startTimer() {
             const timerEl = document.getElementById('timer');
             timerInterval = setInterval(() => {
@@ -308,7 +375,7 @@ document.addEventListener("visibilitychange", () => {
         }
 
         function finishExam() {
-            if(confirm("Apakah Anda yakin ingin menyelesaikan ujian? Jawaban tidak dapat diubah lagi.")) {
+            if(confirm("Apakah Anda yakin ingin menyelesaikan ujian? Jawaban tidak dapat diubah lagi setelah ini.")) {
                 handleFinish();
             }
         }
@@ -317,7 +384,7 @@ document.addEventListener("visibilitychange", () => {
             clearInterval(timerInterval);
             document.getElementById('lock-screen').classList.replace('hidden', 'flex');
             setTimeout(() => {
-                localStorage.clear();
+                localStorage.removeItem('isLoggedIn'); // Logout sesi otomatis
                 window.location.href = "index.html";
             }, 2500);
         }
