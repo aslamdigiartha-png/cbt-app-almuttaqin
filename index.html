@@ -25,7 +25,7 @@
             <div class="relative z-10 mt-10">
                 <div class="bg-blue-900/50 p-4 rounded-lg border border-blue-700/50">
                     <p class="text-xs text-blue-200 mb-1">Status Server</p>
-                    <p class="text-sm font-semibold text-green-400"><i class="fa-solid fa-wifi mr-2"></i> Terhubung ke Cloud</p>
+                    <p class="text-sm font-semibold text-green-400"><i class="fa-solid fa-wifi mr-2"></i> Terhubung ke Cloud Firestore</p>
                 </div>
             </div>
         </div>
@@ -37,13 +37,11 @@
                 <p class="text-slate-500 text-sm mt-1">Silakan masuk untuk mengakses sistem ujian terpadu.</p>
             </div>
 
-            <!-- Tab Peran -->
             <div class="flex p-1 bg-slate-100 rounded-lg mb-8">
                 <button onclick="switchTab('siswa')" id="tab-siswa" class="flex-1 py-2 text-sm font-semibold rounded-md shadow bg-white text-blue-700 tab-transition"><i class="fa-solid fa-user-graduate mr-2"></i> Siswa</button>
                 <button onclick="switchTab('staf')" id="tab-staf" class="flex-1 py-2 text-sm font-semibold rounded-md text-slate-500 hover:text-slate-700 tab-transition"><i class="fa-solid fa-chalkboard-user mr-2"></i> Guru / Admin</button>
             </div>
 
-            <!-- Pesan Error Dinamis -->
             <div id="error-msg" class="hidden mb-4 p-3 bg-red-100 border border-red-300 text-red-700 text-sm rounded-lg flex items-center">
                 <i class="fa-solid fa-circle-exclamation mr-2"></i> <span id="error-text">Kredensial tidak valid!</span>
             </div>
@@ -67,28 +65,25 @@
         </div>
     </div>
 
-    <!-- Integrasi Firebase v9 (Modular SDK via CDN) -->
+    <!-- Integrasi Firebase Modular SDK -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        // GANTI KONFIGURASI INI DENGAN DATA PROYEK FIREBASE ANDA
-       const firebaseConfig = {
-  apiKey: "AIzaSyBzAz8iihVDxQibRXgDscQ7utzsDMZZ1KM",
-  authDomain: "cbt-sekolah-almuttaqin.firebaseapp.com",
-  databaseURL: "https://cbt-sekolah-almuttaqin-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "cbt-sekolah-almuttaqin",
-  storageBucket: "cbt-sekolah-almuttaqin.firebasestorage.app",
-  messagingSenderId: "936101300207",
-  appId: "1:936101300207:web:913118187690e7988fd81a",
-  measurementId: "G-Z07ZZ09K24"
-};
+        const firebaseConfig = {
+            apiKey: "AIzaSyBzAz8iihVDxQibRXgDscQ7utzsDMZZ1KM",
+            authDomain: "cbt-sekolah-almuttaqin.firebaseapp.com",
+            databaseURL: "https://cbt-sekolah-almuttaqin-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "cbt-sekolah-almuttaqin",
+            storageBucket: "cbt-sekolah-almuttaqin.firebasestorage.app",
+            messagingSenderId: "936101300207",
+            appId: "1:936101300207:web:913118187690e7988fd81a",
+            measurementId: "G-Z07ZZ09K24"
+        };
 
-        // Inisialisasi Firebase & Firestore
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // State UI
         window.currentRole = 'siswa';
 
         window.switchTab = function(role) {
@@ -96,9 +91,8 @@
             const tabSiswa = document.getElementById('tab-siswa');
             const tabStaf = document.getElementById('tab-staf');
             const labelUsername = document.getElementById('label-username');
-            const errorMsg = document.getElementById('error-msg');
             
-            errorMsg.classList.add('hidden'); // Sembunyikan error saat pindah tab
+            document.getElementById('error-msg').classList.add('hidden');
 
             if (role === 'siswa') {
                 tabSiswa.className = "flex-1 py-2 text-sm font-semibold rounded-md shadow bg-white text-blue-700 tab-transition";
@@ -113,26 +107,23 @@
             document.getElementById('password').value = "";
         };
 
-        // Logika Eksekusi Login dengan Firestore
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            
             const userVal = document.getElementById('username').value.trim();
             const passVal = document.getElementById('password').value.trim();
             
-            // Animasi Loading
             const btnText = document.getElementById('btn-text');
             const spinner = document.getElementById('loading-spinner');
             const errorMsg = document.getElementById('error-msg');
             const errorText = document.getElementById('error-text');
             
-            btnText.innerText = "Menghubungkan ke Server...";
+            btnText.innerText = "Memeriksa Database...";
             spinner.style.display = "block";
             errorMsg.classList.add('hidden');
 
             try {
-                // Melakukan Query (Pencarian) ke Koleksi 'users' di Firestore
                 const usersRef = collection(db, "users");
+                // Cari berdasarkan username & password
                 const q = query(
                     usersRef, 
                     where("username", "==", userVal), 
@@ -143,33 +134,25 @@
                 const querySnapshot = await getDocs(q);
 
                 if (querySnapshot.empty) {
-                    // Jika data tidak ditemukan
-                    errorText.innerText = "Username atau Password salah!";
+                    errorText.innerText = "Username atau Password salah/tidak ditemukan!";
                     errorMsg.classList.remove('hidden');
                 } else {
-                    // Jika data ditemukan (Login Sukses)
                     let userData;
                     querySnapshot.forEach((doc) => { userData = doc.data(); });
 
-                    // Simpan Token Sesi ke LocalStorage (Sebagai penanda otorisasi sementara untuk halaman lain)
                     localStorage.setItem('isLoggedIn', 'true');
                     localStorage.setItem('userName', userData.username);
-                    localStorage.setItem('userRealName', userData.nama);
+                    localStorage.setItem('userRealName', userData.nama || userData.username);
                     localStorage.setItem('userRole', userData.role);
+                    localStorage.setItem('userClass', userData.kelas || '-');
 
-                    // Pengalihan halaman
-                    if (userData.role === 'siswa') {
-                        window.location.href = "siswa.html";
-                    } else {
-                        window.location.href = "guru.html";
-                    }
+                    window.location.href = userData.role === 'siswa' ? "siswa.html" : "guru.html";
                 }
             } catch (error) {
-                console.error("Firebase Error:", error);
-                errorText.innerText = "Gagal terhubung ke Database. Periksa koneksi internet Anda.";
+                console.error(error);
+                errorText.innerText = "Gagal terhubung ke Server Cloud. Periksa koneksi internet.";
                 errorMsg.classList.remove('hidden');
             } finally {
-                // Matikan loading
                 btnText.innerText = "Verifikasi & Masuk";
                 spinner.style.display = "none";
             }
