@@ -417,5 +417,22 @@
             window.location.href = "index.html"; // Tendang ke halaman login
         }
     </script>
+    // 1. Blokir Klik Kanan (Mencegah Copy/Paste dan Inspect Element)
+document.addEventListener('contextmenu', event => event.preventDefault());
+
+// 2. Blokir Shortcut Keyboard (Ctrl+C, Ctrl+V, F12, Print Screen)
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'F12' || (e.ctrlKey && ['c', 'v', 'x', 'p', 's', 'u'].includes(e.key.toLowerCase()))) {
+        e.preventDefault();
+    }
+});
+
+// 3. Deteksi Pindah Tab (Siswa mencoba Googling)
+document.addEventListener("visibilitychange", () => {
+    if (document.hidden) {
+        alert("PELANGGARAN: Anda terdeteksi keluar dari layar ujian! Aktivitas ini dicatat oleh sistem.");
+        // Opsional: Langsung kirim trigger ke Firebase agar Guru tahu siswa ini melanggar
+    }
+});
 </body>
 </html>
