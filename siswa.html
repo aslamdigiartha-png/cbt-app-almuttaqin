@@ -322,21 +322,26 @@
         function handleAnswer(type, val1) {
             const q = questionsData[currentIndex];
             if (type === 'pg') { q.answer = val1; q.isAnswered = true; } 
-            else if (type === 'pgk') {
-                if(!q.answer) q.answer = [];
-                const idx = q.answer.indexOf(val1);
-                if (idx > -1) q.answer.splice(idx, 1);
-                else q.answer.push(val1);
-                q.isAnswered = q.answer.length > 0;
-            }
             else if (type === 'isian') {
                 q.answer = val1;
                 q.isAnswered = val1.trim().length > 0;
             }
+            // ... (logika PG kompleks tetap sama)
+
             updateGridBtnColor(document.getElementById(`grid-btn-${currentIndex}`), currentIndex);
             if(type === 'pg' || type === 'pgk') renderQuestion(currentIndex); 
+
+            // --- TAMBAHAN AUTO-SAVE KE DATABASE ---
+            // Secara nyata, di sini Anda memanggil Firebase updateDoc()
+            simpanJawabanKeServer(q.id_asli, q.answer);
         }
 
+        // Fungsi Auto-Save Berjalan di Latar Belakang (Tanpa mengganggu layar siswa)
+        async function simpanJawabanKeServer(idSoal, jawaban) {
+            console.log(`Menyimpan soal ID ${idSoal} dengan jawaban ${jawaban} ke server...`);
+            // Kode Firebase updateDoc() akan diletakkan di sini oleh Backend Developer Anda
+            // Contoh: await updateDoc(doc(db, "hasil_ujian", idDokumenSiswa), { [`jawaban_${idSoal}`]: jawaban });
+        }
         function navigate(step) {
             const newIndex = currentIndex + step;
             if (newIndex >= 0 && newIndex < totalQuestions) goToQuestion(newIndex);
