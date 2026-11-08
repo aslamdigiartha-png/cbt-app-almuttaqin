@@ -34,10 +34,18 @@
 
     <!-- Sidebar Navigasi -->
     <aside class="w-64 bg-slate-900 text-slate-300 flex flex-col h-full flex-shrink-0 transition-all z-20 overflow-y-auto no-print">
-        <div class="h-16 flex items-center px-6 border-b border-slate-800 bg-slate-950 flex-shrink-0">
-            <img id="sidebar-logo" src="https://via.placeholder.com/150/000000/FFFFFF/?text=CBT" class="w-8 h-8 rounded-full object-cover mr-3 bg-white hidden">
-            <i id="sidebar-icon" class="fa-solid fa-graduation-cap text-blue-500 text-xl mr-3"></i>
-            <span class="text-white font-bold text-lg tracking-wide">CBT Panel</span>
+        <!-- MODIFIKASI: Area Header Sidebar Diperbesar untuk Jenis Asesmen -->
+        <div class="py-5 flex flex-col px-6 border-b border-slate-800 bg-slate-950 flex-shrink-0 shadow-md">
+            <div class="flex items-center mb-3">
+                <img id="sidebar-logo" src="https://via.placeholder.com/150/000000/FFFFFF/?text=CBT" class="w-8 h-8 rounded-full object-cover mr-3 bg-white hidden">
+                <i id="sidebar-icon" class="fa-solid fa-graduation-cap text-blue-500 text-xl mr-3"></i>
+                <span class="text-white font-bold text-lg tracking-wide">CBT Panel</span>
+            </div>
+            <!-- BADGE JENIS ASESMEN -->
+            <div class="bg-slate-800/80 p-2 rounded border border-slate-700 flex items-center justify-center shadow-inner">
+                <i class="fa-solid fa-tags text-blue-400 text-xs mr-2"></i>
+                <span id="sidebar-jenis-ujian" class="text-xs text-blue-300 font-bold uppercase tracking-wider text-center">NAMA ASESMEN</span>
+            </div>
         </div>
         
         <div class="p-4 flex-1">
@@ -53,7 +61,7 @@
 
             <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3 mt-8">Sistem</p>
             <ul class="space-y-1">
-                <li><a href="#" onclick="switchMenu('pengaturan')" id="btn-pengaturan" class="menu-item flex items-center px-4 py-2.5 rounded-lg hover:bg-slate-800 hover:text-white transition"><i class="fa-solid fa-cog w-5 mr-2"></i> Identitas Sekolah</a></li>
+                <li><a href="#" onclick="switchMenu('pengaturan')" id="btn-pengaturan" class="menu-item flex items-center px-4 py-2.5 rounded-lg hover:bg-slate-800 hover:text-white transition"><i class="fa-solid fa-cog w-5 mr-2"></i> Identitas & Ujian</a></li>
                 <li><a href="#" onclick="switchMenu('database')" id="btn-database" class="menu-item flex items-center px-4 py-2.5 rounded-lg hover:bg-slate-800 hover:text-white transition"><i class="fa-solid fa-database w-5 mr-2"></i> Manajemen Data</a></li>
             </ul>
         </div>
@@ -126,7 +134,7 @@
                 </div>
             </div>
 
-            <!-- VIEW: BANK SOAL TERLENGKAP -->
+            <!-- VIEW: BANK SOAL -->
             <div id="view-bank-soal" class="view-section hidden max-w-5xl mx-auto space-y-6">
                 <!-- Panel Import Soal Excel -->
                 <div class="bg-white rounded-xl shadow-sm border p-6 flex flex-col md:flex-row justify-between items-center gap-4 border-l-4 border-l-green-500">
@@ -152,7 +160,7 @@
                     <button onclick="simpanProfilSoal()" class="mt-4 bg-slate-800 hover:bg-slate-900 text-white px-4 py-2 rounded shadow text-sm font-semibold transition">Kunci Profil Soal</button>
                 </div>
 
-                <!-- Editor Input Manual (Dikembalikan Sepenuhnya) -->
+                <!-- Editor Input Manual -->
                 <div class="bg-white rounded-xl shadow-sm border overflow-hidden">
                     <div class="p-6 border-b bg-slate-50/50 flex justify-between items-center">
                         <h2 class="text-lg font-bold text-slate-800">Input Soal Baru (Manual)</h2>
@@ -167,9 +175,7 @@
                         </select>
                         <textarea class="w-full p-3 border rounded-lg text-sm focus:border-blue-500 outline-none" rows="3" placeholder="Teks Stimulus (Wacana / Cerita - Opsional)..."></textarea>
                         <textarea class="w-full p-3 border rounded-lg text-sm focus:border-blue-500 outline-none" rows="2" placeholder="Pertanyaan Utama..."></textarea>
-                        <div id="jawabanContainer" class="space-y-3 mt-4 border-t pt-4">
-                            <!-- Kontainer Jawaban Dinamis -->
-                        </div>
+                        <div id="jawabanContainer" class="space-y-3 mt-4 border-t pt-4"></div>
                     </div>
                 </div>
             </div>
@@ -182,7 +188,7 @@
                 </div>
                 <div class="bg-white rounded-xl shadow-sm border overflow-hidden">
                     <table class="w-full text-left border-collapse">
-                        <thead class="bg-slate-50 border-b text-sm text-slate-600"><tr><th class="p-4">Mapel</th><th class="p-4">Tanggal</th><th class="p-4">Durasi</th><th class="p-4 text-center">Token</th><th class="p-4 text-center">Aksi</th></tr></thead>
+                        <thead class="bg-slate-50 border-b text-sm text-slate-600"><tr><th class="p-4">Mapel</th><th class="p-4">Tanggal</th><th class="p-4">Durasi</th><th class="p-4 text-center">Token</th><th class="p-4 text-center">Status</th><th class="p-4 text-center">Aksi</th></tr></thead>
                         <tbody id="tabel-jadwal" class="text-sm"></tbody>
                     </table>
                 </div>
@@ -206,17 +212,26 @@
                 </div>
             </div>
 
-            <!-- VIEW: PENGATURAN SEKOLAH -->
+            <!-- VIEW: PENGATURAN SEKOLAH & ASESMEN -->
             <div id="view-pengaturan" class="view-section hidden max-w-3xl mx-auto bg-white rounded-xl shadow-sm border p-8">
-                <h2 class="text-xl font-bold mb-6 border-b pb-4">Identitas & Logo Sekolah</h2>
+                <h2 class="text-xl font-bold mb-6 border-b pb-4">Identitas Sekolah & Pengaturan Ujian</h2>
                 <form onsubmit="simpanIdentitasLokal(event)" class="space-y-5">
-                    <div><label class="block text-sm font-semibold mb-2">Nama Sekolah</label><input type="text" id="input-school-name" required class="w-full p-3 border rounded-lg"></div>
+                    <div>
+                        <label class="block text-sm font-semibold mb-2">Nama Sekolah</label>
+                        <input type="text" id="input-school-name" required class="w-full p-3 border rounded-lg focus:border-blue-500 outline-none" placeholder="Contoh: SMP Islam Terpadu Al-Muttaqin">
+                    </div>
+                    <!-- MODIFIKASI: Input Nama Asesmen -->
+                    <div>
+                        <label class="block text-sm font-semibold mb-2">Nama/Jenis Asesmen</label>
+                        <input type="text" id="input-jenis-ujian" required class="w-full p-3 border rounded-lg focus:border-blue-500 outline-none" placeholder="Contoh: Sumatif Akhir Semester (SAS)">
+                        <p class="text-xs text-slate-500 mt-1">Jenis asesmen ini akan dicetak otomatis di Kartu Peserta Ujian.</p>
+                    </div>
                     <div>
                         <label class="block text-sm font-semibold mb-2">Unggah Logo Sekolah</label>
                         <input type="file" id="input-logo" accept="image/png, image/jpeg" onchange="previewImageLokal(this)" class="block w-full text-sm">
                         <img id="preview-logo" class="w-16 h-16 rounded mt-3 border object-cover hidden">
                     </div>
-                    <button type="submit" class="w-full bg-blue-600 text-white font-bold py-3 rounded-lg shadow hover:bg-blue-700 transition">Simpan Identitas</button>
+                    <button type="submit" class="w-full bg-blue-600 text-white font-bold py-3 rounded-lg shadow hover:bg-blue-700 transition">Simpan Pengaturan</button>
                 </form>
             </div>
 
@@ -321,7 +336,7 @@
                     const s = document.data();
                     if(s.role === "siswa") {
                         count++;
-                        s.idDoc = document.id; // Simpan ID Firebase untuk referensi update/delete
+                        s.idDoc = document.id; 
                         window.dataSiswaList.push(s); 
                         tb.innerHTML += `<tr class="border-b hover:bg-slate-50"><td class="p-4 font-bold text-blue-600">${s.username}</td><td class="p-4">${s.nama}</td><td class="p-4">${s.kelas||'-'}</td><td class="p-4">${s.password}</td><td class="p-4 text-center"><button onclick="bukaModalSiswa(true, '${s.idDoc}')" class="text-yellow-500 bg-yellow-50 px-2 py-1 rounded hover:bg-yellow-100 transition mr-2" title="Edit"><i class="fa-solid fa-edit"></i></button><button onclick="hapusDokumen('users', '${document.id}')" class="text-red-500 bg-red-50 px-2 py-1 rounded hover:bg-red-100 transition" title="Hapus"><i class="fa-solid fa-trash"></i></button></td></tr>`;
                     }
@@ -346,11 +361,8 @@
             };
 
             try {
-                if (idDoc) { // Mode Edit
-                    await updateDoc(doc(db, "users", idDoc), dataBaru);
-                } else { // Mode Tambah Baru
-                    await addDoc(collection(db, "users"), dataBaru);
-                }
+                if (idDoc) { await updateDoc(doc(db, "users", idDoc), dataBaru); } 
+                else { await addDoc(collection(db, "users"), dataBaru); }
                 tutupModalSiswa(); e.target.reset(); muatDataSiswa();
             } catch (err) { alert("Error: " + err.message); }
             finally { btn.innerText = "Simpan ke Firebase"; btn.disabled = false; }
@@ -371,7 +383,6 @@
                     tb.innerHTML += `<tr class="border-b hover:bg-slate-50"><td class="p-4 font-bold text-slate-700">${j.mapel}</td><td class="p-4">${j.tanggal}</td><td class="p-4">${j.durasi} Min</td><td class="p-4 font-mono font-bold text-yellow-600 bg-yellow-50 border rounded">${j.token}</td><td class="p-4 text-center"><button onclick="bukaModalJadwal(true, '${j.idDoc}')" class="text-yellow-500 bg-yellow-50 px-2 py-1 rounded hover:bg-yellow-100 transition mr-2"><i class="fa-solid fa-edit"></i></button><button onclick="hapusDokumen('jadwal_ujian', '${j.idDoc}')" class="text-red-500 bg-red-50 px-2 py-1 rounded hover:bg-red-100 transition"><i class="fa-solid fa-trash"></i></button></td></tr>`;
                 });
                 document.getElementById('stat-jadwal').innerText = count;
-                // Cache lokal agar terbaca di halaman siswa (Prototipe Integrasi)
                 if(count > 0) localStorage.setItem('db_jadwal', JSON.stringify(window.jadwalList));
                 else localStorage.removeItem('db_jadwal');
             } catch (error) { console.error(error); }
@@ -425,7 +436,6 @@
             if(id === 'dasbor') { document.getElementById('stat-soal').innerText = window.totalSoalDB; }
         }
 
-        // FUNGSI MODAL SISWA & JADWAL
         window.bukaModalSiswa = (isEdit = false, idDoc = "") => { 
             const title = document.getElementById('title-modal-siswa');
             if(isEdit) {
@@ -502,25 +512,6 @@
             window.totalSoalDB++; localStorage.setItem('db_total_soal', window.totalSoalDB); document.getElementById('stat-soal').innerText = window.totalSoalDB;
             alert("Soal berhasil disimpan ke bank soal (Simulasi Lokal)!"); document.querySelectorAll('textarea').forEach(el => el.value = '');
         }
-
-        // Logika Import/Export Excel Data Siswa & Soal
-        window.unduhTemplateSiswa = () => {
-            const csvContent = "NISN,Nama Lengkap,Kelas,Password\n202615,Contoh Siswa Pertama,IX-A,Siswa123\n202616,Contoh Siswa Kedua,IX-B,Rahasia123\n";
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = "Template_Data_Siswa.csv";
-            document.body.appendChild(link); link.click(); document.body.removeChild(link);
-        }
-        window.importExcelSiswa = async (input) => {
-            if(input.files.length > 0) {
-                alert(`Membaca file: ${input.files[0].name}.\nMensimulasikan pengiriman data massal ke Firebase...`);
-                try {
-                    await addDoc(collection(db, "users"), { username: "202612", nama: "Siswa Excel 1", kelas: "IX", password: "P4SS", role: "siswa" });
-                    await addDoc(collection(db, "users"), { username: "202613", nama: "Siswa Excel 2", kelas: "IX", password: "R4H4", role: "siswa" });
-                    alert("Import Selesai!"); muatDataSiswa();
-                } catch(e) { alert("Gagal Import: " + e.message); }
-                input.value = "";
-            }
-        }
         window.unduhTemplateSoal = () => {
             const csvContent = 'Tipe Soal,Teks Stimulus,Teks Pertanyaan,Opsi A,Opsi B,Opsi C,Opsi D,Opsi E,Kunci\npg,"Pada tahun 1945...","Siapa pembaca teks proklamasi?","Ir. Soekarno","Moh. Hatta","A. Subarjo","Sayuti Melik","Fatmawati","A"\nisian,,"Tahun berapa Indonesia merdeka?",,,,,,,"1945"\n';
             const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -546,10 +537,8 @@
             const val = document.getElementById('select-jadwal-hasil').value; const area = document.getElementById('area-tabel-nilai'); const tb = document.getElementById('tabel-nilai-body');
             if(val === "") { area.classList.add('hidden'); return; }
             area.classList.remove('hidden'); tb.innerHTML = '';
-            
-            // Generate simulasi nilai dari array siswa firebase
             window.dataSiswaList.forEach(s => {
-                let tSoal = window.totalSoalDB > 0 ? window.totalSoalDB : 40; // Default 40 jika kosong
+                let tSoal = window.totalSoalDB > 0 ? window.totalSoalDB : 40; 
                 let benar = Math.floor(Math.random() * tSoal); 
                 let nilai = Math.round((benar / tSoal) * 100);
                 tb.innerHTML += `<tr class="border-b hover:bg-slate-50 transition"><td class="p-4 font-semibold text-slate-700">${s.nama}</td><td class="p-4 text-center text-green-600 font-bold">${benar}</td><td class="p-4 text-center text-red-600 font-bold">${tSoal - benar}</td><td class="p-4 text-center font-bold text-lg text-blue-700">${nilai}</td></tr>`;
@@ -571,11 +560,14 @@
             document.body.appendChild(link); link.click(); document.body.removeChild(link);
         }
 
-        // --- IDENTITAS LOKAL & CETAK ---
+        // --- IDENTITAS LOKAL, ASESMEN & CETAK KARTU ---
         window.simpanIdentitasLokal = (e) => {
-            e.preventDefault(); localStorage.setItem('schoolName', document.getElementById('input-school-name').value);
-            const logo = document.getElementById('input-logo'); if(logo.dataset.base64) localStorage.setItem('schoolLogo', logo.dataset.base64);
-            alert("Identitas UI Tersimpan"); muatIdentitas();
+            e.preventDefault(); 
+            localStorage.setItem('schoolName', document.getElementById('input-school-name').value);
+            localStorage.setItem('jenisUjian', document.getElementById('input-jenis-ujian').value);
+            const logo = document.getElementById('input-logo'); 
+            if(logo.dataset.base64) localStorage.setItem('schoolLogo', logo.dataset.base64);
+            alert("Identitas & Jenis Ujian Tersimpan"); muatIdentitas();
         }
         window.previewImageLokal = (input) => {
             if(input.files && input.files[0]) { const r = new FileReader(); r.onload = (e) => { input.dataset.base64 = e.target.result; document.getElementById('preview-logo').src = e.target.result; document.getElementById('preview-logo').classList.remove('hidden'); }; r.readAsDataURL(input.files[0]); }
@@ -585,23 +577,44 @@
             const printArea = document.getElementById('print-area');
             const sn = localStorage.getItem('schoolName') || 'SEKOLAH';
             const sl = localStorage.getItem('schoolLogo') || 'https://via.placeholder.com/100/FFFFFF/000000/?text=LOGO';
+            const ju = localStorage.getItem('jenisUjian') || 'ASESMEN NASIONAL';
+
             let html = '';
             window.dataSiswaList.forEach(s => {
-                html += `<div class="kartu-peserta"><div style="display:flex; align-items:center; border-bottom:1px solid #000; padding-bottom:10px; margin-bottom:10px;"><img src="${sl}" style="width:45px; height:45px; object-fit:contain; margin-right:15px;"><div style="text-align:left; width:100%;"><h3 style="font-weight:bold; font-size:14px; margin:0;">KARTU PESERTA UJIAN</h3><p style="font-size:11px; margin:0; font-weight:normal;">${sn.toUpperCase()}</p></div></div><table style="width:100%; font-size:12px; font-weight:bold; line-height:1.8;"><tr><td width="35%">NAMA</td><td>: ${s.nama.toUpperCase()}</td></tr><tr><td>KELAS</td><td>: ${s.kelas||'-'}</td></tr><tr><td>USER (NISN)</td><td>: <span style="font-family:monospace; font-size:14px;">${s.username}</span></td></tr><tr><td>PASSWORD</td><td>: <span style="font-family:monospace; font-size:14px;">${s.password}</span></td></tr></table></div>`;
+                html += `
+                <div class="kartu-peserta">
+                    <div style="display:flex; align-items:center; border-bottom:1px solid #000; padding-bottom:10px; margin-bottom:10px;">
+                        <img src="${sl}" style="width:45px; height:45px; object-fit:contain; margin-right:15px;">
+                        <div style="text-align:left; width:100%;">
+                            <h3 style="font-weight:bold; font-size:14px; margin:0;">KARTU PESERTA ${ju.toUpperCase()}</h3>
+                            <p style="font-size:11px; margin:0; font-weight:normal;">${sn.toUpperCase()}</p>
+                        </div>
+                    </div>
+                    <table style="width:100%; font-size:12px; font-weight:bold; line-height:1.8;">
+                        <tr><td width="35%">NAMA</td><td>: ${s.nama.toUpperCase()}</td></tr>
+                        <tr><td>KELAS</td><td>: ${s.kelas||'-'}</td></tr>
+                        <tr><td>USER (NISN)</td><td>: <span style="font-family:monospace; font-size:14px;">${s.username}</span></td></tr>
+                        <tr><td>PASSWORD</td><td>: <span style="font-family:monospace; font-size:14px;">${s.password}</span></td></tr>
+                    </table>
+                </div>`;
             });
             printArea.innerHTML = html; window.print();
         }
 
         function muatIdentitas() {
-            const sn = localStorage.getItem('schoolName'); const sl = localStorage.getItem('schoolLogo');
+            const sn = localStorage.getItem('schoolName'); 
+            const sl = localStorage.getItem('schoolLogo');
+            const ju = localStorage.getItem('jenisUjian');
+
             if(sn) { document.getElementById('display-school-name').innerText = sn; document.getElementById('input-school-name').value = sn; }
+            if(ju) { document.getElementById('sidebar-jenis-ujian').innerText = ju; document.getElementById('input-jenis-ujian').value = ju; }
             if(sl) { document.getElementById('sidebar-logo').src = sl; document.getElementById('sidebar-logo').classList.remove('hidden'); document.getElementById('sidebar-icon').classList.add('hidden'); document.getElementById('preview-logo').src = sl; document.getElementById('preview-logo').classList.remove('hidden'); }
             document.getElementById('stat-soal').innerText = window.totalSoalDB;
         }
 
         // --- BACKUP & RESTORE JSON LOKAL ---
         window.backupData = () => {
-            const data = { sekolah: localStorage.getItem('schoolName'), total_soal: window.totalSoalDB };
+            const data = { sekolah: localStorage.getItem('schoolName'), jenis: localStorage.getItem('jenisUjian'), total_soal: window.totalSoalDB };
             const a = document.createElement('a'); a.href = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data));
             a.download = "Backup_Konfigurasi_CBT.json"; a.click();
         }
@@ -613,6 +626,7 @@
                         try {
                             const importedData = JSON.parse(e.target.result);
                             if(importedData.sekolah) localStorage.setItem('schoolName', importedData.sekolah);
+                            if(importedData.jenis) localStorage.setItem('jenisUjian', importedData.jenis);
                             if(importedData.total_soal !== undefined) localStorage.setItem('db_total_soal', importedData.total_soal);
                             alert("Restore Data JSON berhasil! Halaman akan dimuat ulang."); window.location.reload();
                         } catch(err) { alert("ERROR: Format file JSON tidak valid."); }
@@ -624,7 +638,7 @@
         }
         window.hapusSemuaData = () => {
             if(confirm("YAKIN HAPUS SELURUH PENGATURAN LOKAL?")) {
-                localStorage.removeItem('schoolName'); localStorage.removeItem('schoolLogo'); localStorage.removeItem('db_total_soal');
+                localStorage.removeItem('schoolName'); localStorage.removeItem('schoolLogo'); localStorage.removeItem('jenisUjian'); localStorage.removeItem('db_total_soal');
                 alert("Pengaturan dikosongkan. Halaman akan direfresh."); window.location.reload();
             }
         }
