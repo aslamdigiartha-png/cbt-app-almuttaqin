@@ -3,150 +3,175 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portal Login - CBT Sekolah</title>
+    <title>Portal Login - CBT Profesional</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         .tab-transition { transition: all 0.3s ease-in-out; }
+        .spinner { border: 3px solid rgba(255,255,255,0.3); border-radius: 50%; border-top-color: #fff; width: 20px; height: 20px; animation: spin 1s ease-in-out infinite; display: none; }
+        @keyframes spin { to { transform: rotate(360deg); } }
     </style>
-    <script>
-        // Pengecekan Sesi Aktif
-        if (localStorage.getItem('isLoggedIn') === 'true') {
-            const role = localStorage.getItem('userRole');
-            if (role === 'siswa') window.location.href = "siswa.html";
-            else if (role === 'guru' || role === 'admin') window.location.href = "guru.html";
-        }
-    </script>
 </head>
 <body class="bg-slate-100 h-screen flex items-center justify-center font-sans bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]">
 
     <div class="w-full max-w-4xl bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col md:flex-row">
-        <!-- Banner Info (Kiri) -->
-        <div class="md:w-5/12 bg-blue-800 text-white p-10 flex flex-col justify-between relative overflow-hidden hidden md:flex">
+        <!-- Banner Kiri -->
+        <div class="md:w-5/12 bg-blue-800 text-white p-10 flex flex-col justify-between relative hidden md:flex">
             <div class="relative z-10">
-                <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center text-blue-800 font-bold text-xl mb-6 shadow-lg">
-                    <i class="fa-solid fa-graduation-cap"></i>
-                </div>
-                <h1 class="text-3xl font-bold mb-2">CBT SIMULATOR</h1>
-                <p class="text-blue-200 text-sm leading-relaxed">Platform Asesmen Digital Terpadu SMP Islam Terpadu Al-Muttaqin. Mendukung format ANBK.</p>
+                <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center text-blue-800 font-bold text-xl mb-6 shadow-lg"><i class="fa-solid fa-server"></i></div>
+                <h1 class="text-3xl font-bold mb-2">CBT ENGINE PRO</h1>
+                <p class="text-blue-200 text-sm leading-relaxed">Platform Asesmen Digital Terpadu Berbasis Cloud Database (Real-time). Mendukung keamanan tingkat tinggi.</p>
             </div>
             <div class="relative z-10 mt-10">
                 <div class="bg-blue-900/50 p-4 rounded-lg border border-blue-700/50">
-                    <p class="text-xs text-blue-200 mb-1">Pusat Bantuan Ujian</p>
-                    <p class="text-sm font-semibold"><i class="fa-solid fa-headset mr-2"></i> Hubungi Proktor Sekolah</p>
+                    <p class="text-xs text-blue-200 mb-1">Status Server</p>
+                    <p class="text-sm font-semibold text-green-400"><i class="fa-solid fa-wifi mr-2"></i> Terhubung ke Cloud</p>
                 </div>
             </div>
-            <!-- Dekorasi -->
-            <div class="absolute -bottom-10 -right-10 w-64 h-64 bg-blue-600 rounded-full mix-blend-multiply filter blur-2xl opacity-50"></div>
-            <div class="absolute -top-10 -left-10 w-40 h-40 bg-blue-500 rounded-full mix-blend-multiply filter blur-xl opacity-50"></div>
         </div>
 
-        <!-- Form Login (Kanan) -->
+        <!-- Form Login -->
         <div class="md:w-7/12 p-8 md:p-12 bg-white flex flex-col justify-center">
             <div class="mb-8">
                 <h2 class="text-2xl font-bold text-slate-800">Selamat Datang 👋</h2>
-                <p class="text-slate-500 text-sm mt-1">Silakan masuk menggunakan akun yang telah terdaftar.</p>
+                <p class="text-slate-500 text-sm mt-1">Silakan masuk untuk mengakses sistem ujian terpadu.</p>
             </div>
 
-            <!-- Tab Role -->
-            <div class="flex p-1 bg-slate-100 rounded-lg mb-8 relative">
-                <button onclick="switchTab('siswa')" id="tab-siswa" class="flex-1 py-2 text-sm font-semibold rounded-md shadow bg-white text-blue-700 tab-transition">
-                    <i class="fa-solid fa-user-graduate mr-2"></i> Siswa
-                </button>
-                <button onclick="switchTab('staf')" id="tab-staf" class="flex-1 py-2 text-sm font-semibold rounded-md text-slate-500 hover:text-slate-700 tab-transition">
-                    <i class="fa-solid fa-chalkboard-user mr-2"></i> Guru / Admin
-                </button>
+            <!-- Tab Peran -->
+            <div class="flex p-1 bg-slate-100 rounded-lg mb-8">
+                <button onclick="switchTab('siswa')" id="tab-siswa" class="flex-1 py-2 text-sm font-semibold rounded-md shadow bg-white text-blue-700 tab-transition"><i class="fa-solid fa-user-graduate mr-2"></i> Siswa</button>
+                <button onclick="switchTab('staf')" id="tab-staf" class="flex-1 py-2 text-sm font-semibold rounded-md text-slate-500 hover:text-slate-700 tab-transition"><i class="fa-solid fa-chalkboard-user mr-2"></i> Guru / Admin</button>
             </div>
 
-            <form onsubmit="handleLogin(event)">
+            <!-- Pesan Error Dinamis -->
+            <div id="error-msg" class="hidden mb-4 p-3 bg-red-100 border border-red-300 text-red-700 text-sm rounded-lg flex items-center">
+                <i class="fa-solid fa-circle-exclamation mr-2"></i> <span id="error-text">Kredensial tidak valid!</span>
+            </div>
+
+            <form id="loginForm">
                 <div class="space-y-5">
                     <div>
-                        <label id="label-username" class="block text-sm font-medium text-slate-700 mb-1">Nomor Induk Siswa (NISN)</label>
-                        <div class="relative">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <i class="fa-regular fa-user text-slate-400"></i>
-                            </div>
-                            <input type="text" id="username" required class="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition text-sm" placeholder="Masukkan NISN Anda">
-                        </div>
+                        <label id="label-username" class="block text-sm font-medium text-slate-700 mb-1">Username / NISN</label>
+                        <input type="text" id="username" required class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" placeholder="Masukkan ID Anda">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-slate-700 mb-1">Kata Sandi</label>
-                        <div class="relative">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <i class="fa-solid fa-lock text-slate-400"></i>
-                            </div>
-                            <input type="password" id="password" required class="w-full pl-10 pr-10 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition text-sm" placeholder="••••••••">
-                            <div class="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer" onclick="togglePassword()">
-                                <i id="eye-icon" class="fa-regular fa-eye text-slate-400 hover:text-slate-600 transition"></i>
-                            </div>
-                        </div>
+                        <input type="password" id="password" required class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" placeholder="••••••••">
                     </div>
                 </div>
-
-                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg mt-8 transition shadow-lg shadow-blue-600/30 flex justify-center items-center">
-                    Masuk ke Sistem <i class="fa-solid fa-arrow-right-to-bracket ml-2"></i>
+                <button type="submit" id="btn-login" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg mt-8 shadow-lg flex justify-center items-center gap-2 transition">
+                    <span id="btn-text">Verifikasi & Masuk</span>
+                    <div id="loading-spinner" class="spinner"></div>
                 </button>
             </form>
-            
-            <div class="mt-8 text-center text-xs text-slate-400 font-medium">
-                CBT Engine &copy; 2026 ASLAM DigiArtha
-            </div>
         </div>
     </div>
 
-    <script>
-        let currentRole = 'siswa';
+    <!-- Integrasi Firebase v9 (Modular SDK via CDN) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        function switchTab(role) {
-            currentRole = role;
+        // GANTI KONFIGURASI INI DENGAN DATA PROYEK FIREBASE ANDA
+        const firebaseConfig = {
+            apiKey: "AIzaSy_GANTI_DENGAN_API_KEY_ANDA",
+            authDomain: "proyek-cbt-anda.firebaseapp.com",
+            projectId: "proyek-cbt-anda",
+            storageBucket: "proyek-cbt-anda.appspot.com",
+            messagingSenderId: "1234567890",
+            appId: "1:1234567890:web:abcdefghijklmn"
+        };
+
+        // Inisialisasi Firebase & Firestore
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // State UI
+        window.currentRole = 'siswa';
+
+        window.switchTab = function(role) {
+            window.currentRole = role;
             const tabSiswa = document.getElementById('tab-siswa');
             const tabStaf = document.getElementById('tab-staf');
             const labelUsername = document.getElementById('label-username');
-            const inputUsername = document.getElementById('username');
+            const errorMsg = document.getElementById('error-msg');
+            
+            errorMsg.classList.add('hidden'); // Sembunyikan error saat pindah tab
 
             if (role === 'siswa') {
                 tabSiswa.className = "flex-1 py-2 text-sm font-semibold rounded-md shadow bg-white text-blue-700 tab-transition";
                 tabStaf.className = "flex-1 py-2 text-sm font-semibold rounded-md text-slate-500 hover:text-slate-700 tab-transition";
                 labelUsername.innerText = "Nomor Induk Siswa (NISN)";
-                inputUsername.placeholder = "Masukkan NISN Anda";
             } else {
                 tabStaf.className = "flex-1 py-2 text-sm font-semibold rounded-md shadow bg-white text-blue-700 tab-transition";
                 tabSiswa.className = "flex-1 py-2 text-sm font-semibold rounded-md text-slate-500 hover:text-slate-700 tab-transition";
                 labelUsername.innerText = "Username / NIP";
-                inputUsername.placeholder = "Masukkan Username atau NIP";
             }
-            inputUsername.value = "";
-        }
+            document.getElementById('username').value = "";
+            document.getElementById('password').value = "";
+        };
 
-        function togglePassword() {
-            const pwdInput = document.getElementById('password');
-            const eyeIcon = document.getElementById('eye-icon');
-            if (pwdInput.type === "password") {
-                pwdInput.type = "text";
-                eyeIcon.classList.replace('fa-eye', 'fa-eye-slash');
-            } else {
-                pwdInput.type = "password";
-                eyeIcon.classList.replace('fa-eye-slash', 'fa-eye');
-            }
-        }
-
-        function handleLogin(event) {
-            event.preventDefault();
-            const userVal = document.getElementById('username').value.toLowerCase();
+        // Logika Eksekusi Login dengan Firestore
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
             
-            // Simpan Data Sesi
-            localStorage.setItem('isLoggedIn', 'true');
-            localStorage.setItem('userName', userVal);
+            const userVal = document.getElementById('username').value.trim();
+            const passVal = document.getElementById('password').value.trim();
+            
+            // Animasi Loading
+            const btnText = document.getElementById('btn-text');
+            const spinner = document.getElementById('loading-spinner');
+            const errorMsg = document.getElementById('error-msg');
+            const errorText = document.getElementById('error-text');
+            
+            btnText.innerText = "Menghubungkan ke Server...";
+            spinner.style.display = "block";
+            errorMsg.classList.add('hidden');
 
-            // Alihkan berdasarkan peran
-            if (currentRole === 'siswa') {
-                localStorage.setItem('userRole', 'siswa');
-                window.location.href = "siswa.html"; 
-            } else {
-                localStorage.setItem('userRole', userVal === 'admin' ? 'admin' : 'guru');
-                window.location.href = "guru.html"; 
+            try {
+                // Melakukan Query (Pencarian) ke Koleksi 'users' di Firestore
+                const usersRef = collection(db, "users");
+                const q = query(
+                    usersRef, 
+                    where("username", "==", userVal), 
+                    where("password", "==", passVal),
+                    where("role", "in", window.currentRole === 'siswa' ? ["siswa"] : ["guru", "admin"])
+                );
+                
+                const querySnapshot = await getDocs(q);
+
+                if (querySnapshot.empty) {
+                    // Jika data tidak ditemukan
+                    errorText.innerText = "Username atau Password salah!";
+                    errorMsg.classList.remove('hidden');
+                } else {
+                    // Jika data ditemukan (Login Sukses)
+                    let userData;
+                    querySnapshot.forEach((doc) => { userData = doc.data(); });
+
+                    // Simpan Token Sesi ke LocalStorage (Sebagai penanda otorisasi sementara untuk halaman lain)
+                    localStorage.setItem('isLoggedIn', 'true');
+                    localStorage.setItem('userName', userData.username);
+                    localStorage.setItem('userRealName', userData.nama);
+                    localStorage.setItem('userRole', userData.role);
+
+                    // Pengalihan halaman
+                    if (userData.role === 'siswa') {
+                        window.location.href = "siswa.html";
+                    } else {
+                        window.location.href = "guru.html";
+                    }
+                }
+            } catch (error) {
+                console.error("Firebase Error:", error);
+                errorText.innerText = "Gagal terhubung ke Database. Periksa koneksi internet Anda.";
+                errorMsg.classList.remove('hidden');
+            } finally {
+                // Matikan loading
+                btnText.innerText = "Verifikasi & Masuk";
+                spinner.style.display = "none";
             }
-        }
+        });
     </script>
 </body>
 </html>
