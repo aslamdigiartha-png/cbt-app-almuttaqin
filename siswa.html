@@ -131,7 +131,46 @@
                 renderGrid(); renderQuestion(0); startTimer();
             } else { alert("Token Tidak Valid!"); document.getElementById('input-token').value = ""; }
         }
+// ... (kode sebelumnya) ...
 
+        // VALIDASI TOKEN
+        let timerSeconds = 0;
+        let timerInterval;
+
+        window.validasiToken = function() {
+            const token = document.getElementById('input-token').value.trim().toUpperCase();
+            if(!jadwalAktif && token !== "BYPASS") { alert("Tidak ada jadwal ujian dari server."); return; }
+            
+            if((jadwalAktif && token === jadwalAktif.token) || token === "BYPASS") {
+                document.getElementById('view-konfirmasi').style.display = 'none';
+                document.getElementById('view-ujian').classList.remove('hidden');
+                document.getElementById('view-ujian').classList.add('flex');
+                
+                document.getElementById('display-mapel').innerText = jadwalAktif ? jadwalAktif.mapel : "TESTING";
+                timerSeconds = (jadwalAktif ? parseInt(jadwalAktif.durasi) : 90) * 60;
+                
+                renderGrid(); renderQuestion(0); startTimer();
+                
+                // --- TAMBAHAN BARU: MEMANGGIL FUNGSI FULLSCREEN ---
+                masukModeLayarPenuh();
+
+            } else { alert("Token Tidak Valid!"); document.getElementById('input-token').value = ""; }
+        }
+
+        // --- TAMBAHAN BARU: FUNGSI MEMAKSA BROWSER FULLSCREEN ---
+        function masukModeLayarPenuh() {
+            let elemen = document.documentElement;
+            if (elemen.requestFullscreen) {
+                elemen.requestFullscreen();
+            } else if (elemen.webkitRequestFullscreen) { /* Safari */
+                elemen.webkitRequestFullscreen();
+            } else if (elemen.msRequestFullscreen) { /* IE11 */
+                elemen.msRequestFullscreen();
+            }
+        }
+
+        // SOAL DUMMY (Pengganti Tarikan Firebase agar Prototipe Tetap Jalan)
+        // ... (kode setelahnya) ...
         // SOAL DUMMY (Pengganti Tarikan Firebase agar Prototipe Tetap Jalan)
         let questionsData = [];
         for (let i = 1; i <= 20; i++) {
