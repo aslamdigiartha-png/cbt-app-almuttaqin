@@ -88,7 +88,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
                     <div class="bg-white p-6 rounded-xl border shadow-sm border-l-4 border-l-blue-500"><p class="text-slate-500 text-sm font-semibold">Total Bank Soal</p><h3 class="text-3xl font-bold mt-2" id="stat-soal">0</h3></div>
                     <div class="bg-white p-6 rounded-xl border shadow-sm border-l-4 border-l-green-500"><p class="text-slate-500 text-sm font-semibold">Jadwal Aktif</p><h3 class="text-3xl font-bold mt-2" id="stat-jadwal">0</h3></div>
-                    <div class="bg-white p-6 rounded-xl border shadow-sm border-l-4 border-l-purple-500"><p class="text-slate-500 text-sm font-semibold">Siswa Terdaftar (Cloud)</p><h3 class="text-3xl font-bold mt-2" id="stat-siswa">0</h3></div>
+                    <div class="bg-white p-6 rounded-xl border shadow-sm border-l-4 border-l-purple-500"><p class="text-slate-500 text-sm font-semibold">Siswa Terdaftar</p><h3 class="text-3xl font-bold mt-2" id="stat-siswa">0</h3></div>
                     <div class="bg-white p-6 rounded-xl border shadow-sm border-l-4 border-l-yellow-500 cursor-pointer hover:bg-slate-50 transition" onclick="switchMenu('monitor')">
                         <p class="text-slate-500 text-sm font-semibold">Peserta Ujian</p>
                         <h3 class="text-3xl font-bold mt-2">Live</h3>
@@ -132,25 +132,67 @@
                 </div>
             </div>
 
-            <!-- ============================================== -->
-            <!-- VIEW: BANK SOAL (TATA LETAK BARU)              -->
-            <!-- ============================================== -->
+            <!-- VIEW: BANK SOAL -->
             <div id="view-bank-soal" class="view-section hidden max-w-5xl mx-auto space-y-6">
                 
-                <!-- 1. Profil Soal (Mapel) -->
+                <!-- 1. Rekapitulasi Mapel -->
+                <div class="bg-white rounded-xl shadow-sm border p-6 mb-6">
+                    <div class="flex flex-col md:flex-row justify-between items-center mb-4 gap-4">
+                        <div>
+                            <h2 class="text-lg font-bold text-slate-800">Rekapitulasi Bank Soal</h2>
+                            <p class="text-sm text-slate-500">Daftar Paket Soal yang siap diaktifkan pada Jadwal Ujian.</p>
+                        </div>
+                        <button onclick="cetakRekapSoal()" class="bg-slate-800 hover:bg-slate-900 text-white px-4 py-2 rounded-lg shadow text-sm font-medium flex items-center transition">
+                            <i class="fa-solid fa-print mr-2"></i> Cetak Rekap
+                        </button>
+                    </div>
+                    <div class="overflow-hidden border rounded-lg">
+                        <table class="w-full text-left border-collapse">
+                            <thead class="bg-slate-50 border-b text-sm text-slate-600">
+                                <tr>
+                                    <th class="p-4 font-semibold">Mata Pelajaran</th>
+                                    <th class="p-4 font-semibold">Kelas</th>
+                                    <th class="p-4 font-semibold">Guru Pengampu</th>
+                                    <th class="p-4 font-semibold text-center">Jumlah Soal</th>
+                                    <th class="p-4 font-semibold text-center">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabel-rekap-soal" class="text-sm text-slate-700"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Panel Import Soal Excel -->
+                <div class="bg-white rounded-xl shadow-sm border p-6 flex flex-col md:flex-row justify-between items-center gap-4 border-l-4 border-l-green-500">
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-800">Upload Soal Massal (Via Excel)</h2>
+                        <p class="text-sm text-slate-500">Pastikan Anda sudah mengunci Profil Paket Soal di bawah ini sebelum import.</p>
+                    </div>
+                    <div class="flex gap-3">
+                        <button onclick="unduhTemplateSoal()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg shadow text-sm font-medium flex items-center transition"><i class="fa-solid fa-file-excel mr-2"></i> Template Soal</button>
+                        <label class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow text-sm font-medium flex items-center cursor-pointer transition">
+                            <i class="fa-solid fa-upload mr-2"></i> Import Soal
+                            <input type="file" accept=".csv, .xlsx, .xls" class="hidden" onchange="importExcelSoal(this)">
+                        </label>
+                    </div>
+                </div>
+
+                <!-- 2. Profil Paket Soal (TAMBAH KELAS) -->
                 <div class="bg-white rounded-xl shadow-sm border p-6">
                     <div class="flex justify-between items-center border-b pb-3 mb-4">
                         <h2 class="text-lg font-bold text-slate-800">1. Profil Paket Soal</h2>
                         <span class="text-xs font-semibold bg-green-100 text-green-700 px-2 py-1 rounded">Langkah Pertama</span>
                     </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div><label class="block text-sm font-semibold mb-1">Mata Pelajaran <span class="text-red-500">*</span></label><input type="text" id="input-mapel" class="w-full p-2.5 border rounded focus:border-blue-500 outline-none" placeholder="Contoh: Matematika"></div>
+                        <!-- FITUR BARU: JENJANG KELAS -->
+                        <div><label class="block text-sm font-semibold mb-1">Jenjang Kelas <span class="text-red-500">*</span></label><input type="text" id="input-kelas" class="w-full p-2.5 border rounded focus:border-blue-500 outline-none" placeholder="Contoh: IX"></div>
                         <div><label class="block text-sm font-semibold mb-1">Guru Pengampu</label><input type="text" id="input-guru" class="w-full p-2.5 border rounded focus:border-blue-500 outline-none" placeholder="Contoh: Budi, S.Pd."></div>
                     </div>
                     <button onclick="simpanProfilSoal()" class="mt-4 bg-slate-800 hover:bg-slate-900 text-white px-5 py-2 rounded shadow text-sm font-semibold transition flex items-center"><i class="fa-solid fa-lock mr-2"></i> Kunci Profil Soal</button>
                 </div>
 
-                <!-- 2. Tabel Review Daftar Soal (FITUR BARU) -->
+                <!-- Tabel Review Daftar Soal -->
                 <div class="bg-white rounded-xl shadow-sm border p-6">
                     <div class="flex flex-col md:flex-row justify-between items-center mb-4 gap-4">
                         <div>
@@ -171,9 +213,7 @@
                                     <th class="p-3 font-semibold text-center w-28">Aksi</th>
                                 </tr>
                             </thead>
-                            <tbody id="tabel-daftar-soal" class="text-sm text-slate-700">
-                                <!-- Data Daftar Soal akan dimuat disini -->
-                            </tbody>
+                            <tbody id="tabel-daftar-soal" class="text-sm text-slate-700"></tbody>
                         </table>
                     </div>
                 </div>
@@ -212,41 +252,17 @@
                         </div>
                     </div>
                 </div>
-
-                <!-- 4. Modul Manajemen Ekstra (Excel & Rekap) -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
-                    <!-- Upload Massal Excel -->
-                    <div class="bg-white rounded-xl shadow-sm border p-6">
-                        <div class="flex items-center mb-4"><i class="fa-solid fa-file-excel text-green-600 text-2xl mr-3"></i><h2 class="text-lg font-bold text-slate-800">Upload Excel</h2></div>
-                        <p class="text-sm text-slate-500 mb-4">Tambahkan soal secara massal menggunakan file format Excel khusus.</p>
-                        <div class="flex gap-2">
-                            <button onclick="unduhTemplateSoal()" class="flex-1 bg-green-100 hover:bg-green-200 text-green-800 py-2 rounded-lg font-semibold text-sm transition">Unduh Template</button>
-                            <label class="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg font-semibold text-sm text-center cursor-pointer transition">
-                                Import File <input type="file" accept=".csv, .xlsx, .xls" class="hidden" onchange="importExcelSoal(this)">
-                            </label>
-                        </div>
-                    </div>
-                    
-                    <!-- Cetak Rekapitulasi Mapel -->
-                    <div class="bg-white rounded-xl shadow-sm border p-6">
-                        <div class="flex items-center mb-4"><i class="fa-solid fa-print text-slate-800 text-2xl mr-3"></i><h2 class="text-lg font-bold text-slate-800">Arsip & Rekapitulasi</h2></div>
-                        <p class="text-sm text-slate-500 mb-4">Cetak dokumen fisik rekapitulasi jumlah soal per Mata Pelajaran.</p>
-                        <button onclick="cetakRekapSoal()" class="w-full bg-slate-800 hover:bg-slate-900 text-white py-2 rounded-lg font-semibold text-sm transition flex items-center justify-center">
-                            <i class="fa-solid fa-print mr-2"></i> Cetak Rekapitulasi Bank Soal
-                        </button>
-                    </div>
-                </div>
             </div>
 
-            <!-- VIEW: JADWAL UJIAN -->
+            <!-- VIEW: JADWAL UJIAN (MAPEL MENGGUNAKAN DROPDOWN PAKET SOAL) -->
             <div id="view-jadwal" class="view-section hidden max-w-5xl mx-auto space-y-6">
                 <div class="flex justify-between items-center bg-white p-6 rounded-xl shadow-sm border">
-                    <div><h2 class="text-lg font-bold">Daftar Jadwal Ujian</h2><p class="text-sm text-slate-500">Atur jadwal untuk digenerate tokennya.</p></div>
-                    <button onclick="bukaModalJadwal()" class="bg-blue-600 text-white px-5 py-2.5 rounded-lg shadow font-medium flex items-center hover:bg-blue-700"><i class="fa-solid fa-plus mr-2"></i> Buat Jadwal</button>
+                    <div><h2 class="text-lg font-bold">Daftar Jadwal Ujian (Sesi Aktif)</h2><p class="text-sm text-slate-500">Pilih Paket Soal yang akan dimunculkan di menu siswa, atur waktu, dan generate token.</p></div>
+                    <button onclick="bukaModalJadwal()" class="bg-blue-600 text-white px-5 py-2.5 rounded-lg shadow font-medium flex items-center hover:bg-blue-700"><i class="fa-solid fa-plus mr-2"></i> Buat Jadwal / Sesi Baru</button>
                 </div>
                 <div class="bg-white rounded-xl shadow-sm border overflow-hidden">
                     <table class="w-full text-left border-collapse">
-                        <thead class="bg-slate-50 border-b text-sm text-slate-600"><tr><th class="p-4">Mapel</th><th class="p-4">Tanggal</th><th class="p-4">Durasi</th><th class="p-4 text-center">Token</th><th class="p-4 text-center">Status</th><th class="p-4 text-center">Aksi</th></tr></thead>
+                        <thead class="bg-slate-50 border-b text-sm text-slate-600"><tr><th class="p-4">Paket Soal (Mapel - Kelas)</th><th class="p-4">Tanggal</th><th class="p-4">Durasi</th><th class="p-4 text-center">Token</th><th class="p-4 text-center">Aksi</th></tr></thead>
                         <tbody id="tabel-jadwal" class="text-sm"></tbody>
                     </table>
                 </div>
@@ -270,19 +286,12 @@
                 </div>
             </div>
 
-            <!-- VIEW: PENGATURAN SEKOLAH & ASESMEN -->
+            <!-- VIEW: PENGATURAN SEKOLAH -->
             <div id="view-pengaturan" class="view-section hidden max-w-3xl mx-auto bg-white rounded-xl shadow-sm border p-8">
                 <h2 class="text-xl font-bold mb-6 border-b pb-4">Identitas Sekolah & Pengaturan Ujian</h2>
                 <form onsubmit="simpanIdentitasLokal(event)" class="space-y-5">
-                    <div>
-                        <label class="block text-sm font-semibold mb-2">Nama Sekolah</label>
-                        <input type="text" id="input-school-name" required class="w-full p-3 border rounded-lg focus:border-blue-500 outline-none" placeholder="Contoh: SMP Islam Terpadu Al-Muttaqin">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-semibold mb-2">Nama/Jenis Asesmen</label>
-                        <input type="text" id="input-jenis-ujian" required class="w-full p-3 border rounded-lg focus:border-blue-500 outline-none" placeholder="Contoh: Sumatif Akhir Semester (SAS)">
-                        <p class="text-xs text-slate-500 mt-1">Jenis asesmen ini akan dicetak otomatis di Kartu Peserta Ujian.</p>
-                    </div>
+                    <div><label class="block text-sm font-semibold mb-2">Nama Sekolah</label><input type="text" id="input-school-name" required class="w-full p-3 border rounded-lg focus:border-blue-500 outline-none" placeholder="Contoh: SMP Islam Terpadu Al-Muttaqin"></div>
+                    <div><label class="block text-sm font-semibold mb-2">Nama/Jenis Asesmen</label><input type="text" id="input-jenis-ujian" required class="w-full p-3 border rounded-lg focus:border-blue-500 outline-none" placeholder="Contoh: Sumatif Akhir Semester (SAS)"></div>
                     <div>
                         <label class="block text-sm font-semibold mb-2">Unggah Logo Sekolah</label>
                         <input type="file" id="input-logo" accept="image/png, image/jpeg" onchange="previewImageLokal(this)" class="block w-full text-sm">
@@ -292,73 +301,68 @@
                 </form>
             </div>
 
-            <!-- VIEW: MANAJEMEN DATA (DATABASE JSON) -->
+            <!-- VIEW: DATABASE (BACKUP/RESTORE) -->
             <div id="view-database" class="view-section hidden max-w-4xl mx-auto">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div class="bg-white p-6 rounded-xl border border-blue-200 shadow-sm text-center">
-                        <i class="fa-solid fa-cloud-arrow-down text-4xl text-blue-500 mb-4"></i>
-                        <h3 class="font-bold text-lg mb-2">Backup Data (Ekspor JSON)</h3>
-                        <p class="text-sm text-slate-500 mb-4">Unduh seluruh konfigurasi sistem ke dalam format JSON lokal.</p>
-                        <button onclick="backupData()" class="w-full bg-blue-100 text-blue-700 hover:bg-blue-200 font-bold py-2 rounded-lg transition">Unduh JSON</button>
+                        <i class="fa-solid fa-cloud-arrow-down text-4xl text-blue-500 mb-4"></i><h3 class="font-bold text-lg mb-2">Backup Data (JSON)</h3>
+                        <button onclick="backupData()" class="w-full bg-blue-100 text-blue-700 hover:bg-blue-200 font-bold py-2 rounded-lg transition">Unduh Konfigurasi Lokal</button>
                     </div>
                     <div class="bg-white p-6 rounded-xl border border-green-200 shadow-sm text-center">
-                        <i class="fa-solid fa-cloud-arrow-up text-4xl text-green-500 mb-4"></i>
-                        <h3 class="font-bold text-lg mb-2">Restore Data (Impor JSON)</h3>
-                        <p class="text-sm text-slate-500 mb-4">Pulihkan data lokal dari file JSON backup sebelumnya.</p>
+                        <i class="fa-solid fa-cloud-arrow-up text-4xl text-green-500 mb-4"></i><h3 class="font-bold text-lg mb-2">Restore Data (JSON)</h3>
                         <label class="w-full bg-green-100 text-green-700 hover:bg-green-200 font-bold py-2 rounded-lg transition cursor-pointer block">
-                            Pilih File .json
-                            <input type="file" accept=".json" class="hidden" onchange="restoreData(this)">
+                            Pilih File .json <input type="file" accept=".json" class="hidden" onchange="restoreData(this)">
                         </label>
                     </div>
                     <div class="bg-white p-6 rounded-xl border border-red-200 shadow-sm text-center md:col-span-2 mt-4">
-                        <i class="fa-solid fa-triangle-exclamation text-4xl text-red-500 mb-4"></i>
-                        <h3 class="font-bold text-lg text-red-600 mb-2">Reset Sistem</h3>
-                        <p class="text-sm text-slate-500 mb-4">Tindakan ini akan <strong>menghapus semua pengaturan lokal</strong>.</p>
-                        <button onclick="hapusSemuaData()" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-8 rounded-lg shadow transition">Kosongkan Database Lokal</button>
+                        <i class="fa-solid fa-triangle-exclamation text-4xl text-red-500 mb-4"></i><h3 class="font-bold text-lg text-red-600 mb-2">Reset Sistem</h3>
+                        <button onclick="hapusSemuaData()" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-8 rounded-lg shadow transition">Kosongkan Semua Pengaturan Lokal</button>
                     </div>
                 </div>
             </div>
         </div>
     </main>
 
-    <!-- MODAL TAMBAH/EDIT SISWA -->
+    <!-- MODAL SISWA -->
     <div id="modal-siswa" class="fixed inset-0 bg-black/60 z-50 hidden items-center justify-center p-4">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg">
-            <div class="bg-slate-900 px-6 py-4 flex justify-between items-center text-white rounded-t-xl">
-                <h3 class="font-bold" id="title-modal-siswa">Tambah Data Siswa</h3>
-                <button onclick="tutupModalSiswa()" class="hover:text-red-400"><i class="fa-solid fa-xmark"></i></button>
-            </div>
+            <div class="bg-slate-900 px-6 py-4 flex justify-between items-center text-white rounded-t-xl"><h3 class="font-bold" id="title-modal-siswa">Tambah Data Siswa</h3><button onclick="tutupModalSiswa()" class="hover:text-red-400"><i class="fa-solid fa-xmark"></i></button></div>
             <form onsubmit="simpanSiswa(event)" class="p-6 space-y-4">
                 <input type="hidden" id="s-id-doc" value="">
-                <div><label class="block text-sm font-semibold">NISN</label><input type="text" id="s-nisn" required class="w-full p-2 border rounded focus:border-blue-500 outline-none"></div>
-                <div><label class="block text-sm font-semibold">Nama Lengkap</label><input type="text" id="s-nama" required class="w-full p-2 border rounded focus:border-blue-500 outline-none"></div>
-                <div><label class="block text-sm font-semibold">Kelas</label><input type="text" id="s-kelas" required class="w-full p-2 border rounded focus:border-blue-500 outline-none"></div>
-                <div><label class="block text-sm font-semibold">Password</label><input type="text" id="s-pass" required class="w-full p-2 border rounded focus:border-blue-500 outline-none"></div>
+                <div><label class="block text-sm font-semibold">NISN</label><input type="text" id="s-nisn" required class="w-full p-2 border rounded outline-none focus:border-blue-500"></div>
+                <div><label class="block text-sm font-semibold">Nama Lengkap</label><input type="text" id="s-nama" required class="w-full p-2 border rounded outline-none focus:border-blue-500"></div>
+                <div><label class="block text-sm font-semibold">Kelas</label><input type="text" id="s-kelas" required class="w-full p-2 border rounded outline-none focus:border-blue-500"></div>
+                <div><label class="block text-sm font-semibold">Password</label><input type="text" id="s-pass" required class="w-full p-2 border rounded outline-none focus:border-blue-500"></div>
                 <button type="submit" id="btn-save-siswa" class="w-full bg-blue-600 text-white font-bold py-2.5 rounded shadow mt-4 hover:bg-blue-700 transition">Simpan ke Firebase</button>
             </form>
         </div>
     </div>
 
-    <!-- MODAL TAMBAH/EDIT JADWAL -->
+    <!-- MODAL JADWAL (MENGGUNAKAN DROPDOWN PAKET SOAL) -->
     <div id="modal-jadwal" class="fixed inset-0 bg-black/60 z-50 hidden items-center justify-center p-4">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg">
-            <div class="bg-slate-900 px-6 py-4 flex justify-between items-center text-white rounded-t-xl">
-                <h3 class="font-bold" id="title-modal-jadwal">Buat Jadwal Baru</h3>
-                <button onclick="tutupModalJadwal()" class="hover:text-red-400"><i class="fa-solid fa-xmark"></i></button>
-            </div>
+            <div class="bg-slate-900 px-6 py-4 flex justify-between items-center text-white rounded-t-xl"><h3 class="font-bold" id="title-modal-jadwal">Buat Jadwal Baru</h3><button onclick="tutupModalJadwal()" class="hover:text-red-400"><i class="fa-solid fa-xmark"></i></button></div>
             <form onsubmit="simpanJadwal(event)" class="p-6 space-y-4">
                 <input type="hidden" id="j-id-doc" value="">
-                <div><label class="block text-sm font-semibold">Mata Pelajaran</label><input type="text" id="j-mapel" required class="w-full p-2 border rounded focus:border-blue-500 outline-none"></div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div><label class="block text-sm font-semibold">Tanggal</label><input type="date" id="j-tanggal" required class="w-full p-2 border rounded focus:border-blue-500 outline-none"></div>
-                    <div><label class="block text-sm font-semibold">Durasi (Menit)</label><input type="number" id="j-durasi" required class="w-full p-2 border rounded focus:border-blue-500 outline-none"></div>
+                
+                <!-- FITUR BARU: DROPDOWN PAKET SOAL -->
+                <div>
+                    <label class="block text-sm font-semibold mb-2">Pilih Paket Soal (Tampil ke Siswa)</label>
+                    <select id="j-mapel" required class="w-full p-2 border rounded focus:border-blue-500 outline-none">
+                        <!-- Opsi digenerate via Javascript dari rekapSoalDB -->
+                    </select>
                 </div>
-                <button type="submit" id="btn-save-jadwal" class="w-full bg-blue-600 text-white font-bold py-2.5 rounded shadow mt-4 hover:bg-blue-700 transition">Generate & Simpan</button>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div><label class="block text-sm font-semibold mb-2">Tanggal Pelaksanaan</label><input type="date" id="j-tanggal" required class="w-full p-2 border rounded focus:border-blue-500 outline-none"></div>
+                    <div><label class="block text-sm font-semibold mb-2">Durasi Ujian (Menit)</label><input type="number" id="j-durasi" required class="w-full p-2 border rounded focus:border-blue-500 outline-none"></div>
+                </div>
+                <button type="submit" id="btn-save-jadwal" class="w-full bg-blue-600 text-white font-bold py-2.5 rounded shadow mt-4 hover:bg-blue-700 transition">Generate Token & Simpan</button>
             </form>
         </div>
     </div>
 
-    <!-- SCRIPT FIREBASE & UI LOGIC -->
+    <!-- SCRIPT FIREBASE & UI LOGIC LENGKAP -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
@@ -382,50 +386,42 @@
         window.jadwalList = [];
         window.totalSoalDB = parseInt(localStorage.getItem('db_total_soal')) || 0;
         window.rekapSoalDB = JSON.parse(localStorage.getItem('db_rekap_soal')) || []; 
-        
-        // Array Baru untuk Fitur Daftar & Edit Soal
         window.daftarSoalLokal = JSON.parse(localStorage.getItem('db_soal_lokal')) || [];
 
-        // FUNGSI FIREBASE: SISWA
+        // --- FUNGSI FIREBASE: SISWA ---
         window.muatDataSiswa = async function() {
             const tb = document.getElementById('tabel-siswa');
             try {
                 const querySnapshot = await getDocs(collection(db, "users"));
-                tb.innerHTML = ''; window.dataSiswaList = [];
-                let count = 0;
+                tb.innerHTML = ''; window.dataSiswaList = []; let count = 0;
                 querySnapshot.forEach((document) => {
                     const s = document.data();
                     if(s.role === "siswa") {
                         count++; s.idDoc = document.id; window.dataSiswaList.push(s); 
-                        tb.innerHTML += `<tr class="border-b hover:bg-slate-50"><td class="p-4 font-bold text-blue-600">${s.username}</td><td class="p-4">${s.nama}</td><td class="p-4">${s.kelas||'-'}</td><td class="p-4">${s.password}</td><td class="p-4 text-center"><button onclick="bukaModalSiswa(true, '${s.idDoc}')" class="text-yellow-500 bg-yellow-50 px-2 py-1 rounded hover:bg-yellow-100 transition mr-2" title="Edit"><i class="fa-solid fa-edit"></i></button><button onclick="hapusDokumen('users', '${document.id}')" class="text-red-500 bg-red-50 px-2 py-1 rounded hover:bg-red-100 transition" title="Hapus"><i class="fa-solid fa-trash"></i></button></td></tr>`;
+                        tb.innerHTML += `<tr class="border-b hover:bg-slate-50"><td class="p-4 font-bold text-blue-600">${s.username}</td><td class="p-4">${s.nama}</td><td class="p-4">${s.kelas||'-'}</td><td class="p-4">${s.password}</td><td class="p-4 text-center"><button onclick="bukaModalSiswa(true, '${s.idDoc}')" class="text-yellow-500 bg-yellow-50 px-2 py-1 rounded hover:bg-yellow-100 transition mr-2"><i class="fa-solid fa-edit"></i></button><button onclick="hapusDokumen('users', '${document.id}')" class="text-red-500 bg-red-50 px-2 py-1 rounded hover:bg-red-100 transition"><i class="fa-solid fa-trash"></i></button></td></tr>`;
                     }
                 });
                 document.getElementById('stat-siswa').innerText = count;
                 if(count === 0) tb.innerHTML = '<tr><td colspan="5" class="text-center p-4 text-slate-500">Belum ada siswa terdaftar.</td></tr>';
-            } catch (error) { console.error(error); tb.innerHTML = '<tr><td colspan="5" class="text-center text-red-500 p-4">Gagal menghubungkan ke Database</td></tr>'; }
+            } catch (error) { tb.innerHTML = '<tr><td colspan="5" class="text-center text-red-500 p-4">Gagal menghubungkan ke Database</td></tr>'; }
         }
 
         window.simpanSiswa = async function(e) {
-            e.preventDefault();
-            const btn = document.getElementById('btn-save-siswa');
-            btn.innerText = "Menyimpan..."; btn.disabled = true;
-            
+            e.preventDefault(); const btn = document.getElementById('btn-save-siswa'); btn.innerText = "Menyimpan..."; btn.disabled = true;
             const idDoc = document.getElementById('s-id-doc').value;
             const dataBaru = { username: document.getElementById('s-nisn').value, nama: document.getElementById('s-nama').value, kelas: document.getElementById('s-kelas').value, password: document.getElementById('s-pass').value, role: "siswa" };
             try {
                 if (idDoc) { await updateDoc(doc(db, "users", idDoc), dataBaru); } else { await addDoc(collection(db, "users"), dataBaru); }
                 tutupModalSiswa(); e.target.reset(); muatDataSiswa();
-            } catch (err) { alert("Error: " + err.message); }
-            finally { btn.innerText = "Simpan ke Firebase"; btn.disabled = false; }
+            } catch (err) { alert("Error: " + err.message); } finally { btn.innerText = "Simpan ke Firebase"; btn.disabled = false; }
         }
 
-        // FUNGSI FIREBASE: JADWAL
+        // --- FUNGSI FIREBASE: JADWAL & KONEKSI PAKET SOAL ---
         window.muatJadwal = async function() {
             const tb = document.getElementById('tabel-jadwal');
             try {
                 const querySnapshot = await getDocs(collection(db, "jadwal_ujian"));
-                tb.innerHTML = ''; window.jadwalList = [];
-                let count = 0;
+                tb.innerHTML = ''; window.jadwalList = []; let count = 0;
                 querySnapshot.forEach((document) => {
                     count++; const j = document.data(); j.idDoc = document.id; window.jadwalList.push(j); 
                     tb.innerHTML += `<tr class="border-b hover:bg-slate-50"><td class="p-4 font-bold text-slate-700">${j.mapel}</td><td class="p-4">${j.tanggal}</td><td class="p-4">${j.durasi} Min</td><td class="p-4 font-mono font-bold text-yellow-600 bg-yellow-50 border rounded">${j.token}</td><td class="p-4 text-center"><button onclick="bukaModalJadwal(true, '${j.idDoc}')" class="text-yellow-500 bg-yellow-50 px-2 py-1 rounded hover:bg-yellow-100 transition mr-2"><i class="fa-solid fa-edit"></i></button><button onclick="hapusDokumen('jadwal_ujian', '${j.idDoc}')" class="text-red-500 bg-red-50 px-2 py-1 rounded hover:bg-red-100 transition"><i class="fa-solid fa-trash"></i></button></td></tr>`;
@@ -436,21 +432,19 @@
         }
 
         window.simpanJadwal = async function(e) {
-            e.preventDefault();
-            const btn = document.getElementById('btn-save-jadwal');
-            btn.innerText = "Processing..."; btn.disabled = true;
+            e.preventDefault(); const btn = document.getElementById('btn-save-jadwal'); btn.innerText = "Processing..."; btn.disabled = true;
             const idDoc = document.getElementById('j-id-doc').value;
+            // mapel disini ditarik dari dropdown paket soal
             const dataBaru = { mapel: document.getElementById('j-mapel').value, tanggal: document.getElementById('j-tanggal').value, durasi: parseInt(document.getElementById('j-durasi').value) };
             try {
                 if(idDoc) { await updateDoc(doc(db, "jadwal_ujian", idDoc), dataBaru); } 
                 else { dataBaru.token = Math.random().toString(36).substring(2, 8).toUpperCase(); dataBaru.status = "Aktif"; await addDoc(collection(db, "jadwal_ujian"), dataBaru); }
                 tutupModalJadwal(); e.target.reset(); muatJadwal();
-            } catch (err) { alert("Error: " + err.message); }
-            finally { btn.innerText = "Generate & Simpan"; btn.disabled = false; }
+            } catch (err) { alert("Error: " + err.message); } finally { btn.innerText = "Generate Token & Simpan"; btn.disabled = false; }
         }
 
         window.hapusDokumen = async function(koleksi, idDoc) {
-            if(confirm("Yakin ingin menghapus data ini secara permanen dari Firebase?")) {
+            if(confirm("Yakin menghapus data ini permanen dari Firebase?")) {
                 await deleteDoc(doc(db, koleksi, idDoc));
                 if(koleksi === 'users') muatDataSiswa(); else muatJadwal();
             }
@@ -462,17 +456,15 @@
             document.getElementById('view-' + id).classList.remove('hidden');
             document.querySelectorAll('.menu-item').forEach(el => { el.classList.remove('bg-blue-600', 'text-white'); el.classList.add('text-slate-300'); });
             document.getElementById('btn-' + id).classList.add('bg-blue-600', 'text-white');
-            
-            const titles = { 'dasbor':'Dasbor Utama', 'monitor':'Monitor Ujian', 'siswa':'Data Siswa', 'bank-soal':'Bank Soal', 'jadwal':'Jadwal Ujian', 'hasil':'Hasil & Nilai', 'pengaturan':'Identitas & Asesmen', 'database':'Database' };
+            const titles = { 'dasbor':'Dasbor Utama', 'monitor':'Monitor Ujian', 'siswa':'Data Siswa', 'bank-soal':'Bank Soal', 'jadwal':'Jadwal Ujian', 'hasil':'Hasil & Nilai', 'pengaturan':'Identitas Sekolah', 'database':'Database' };
             document.getElementById('header-title').innerText = titles[id];
             
             if(id === 'hasil') populateDropdownHasil();
             if(id === 'monitor') renderTabelMonitor();
-            if(id === 'bank-soal') { renderDaftarSoalLokal(); }
+            if(id === 'bank-soal') renderRekapSoal();
             if(id === 'dasbor') document.getElementById('stat-soal').innerText = window.totalSoalDB;
         }
 
-        // FUNGSI MODAL
         window.bukaModalSiswa = (isEdit = false, idDoc = "") => { 
             const title = document.getElementById('title-modal-siswa');
             if(isEdit) {
@@ -484,8 +476,16 @@
             document.getElementById('modal-siswa').classList.add('modal-active'); document.getElementById('modal-siswa').classList.remove('hidden'); 
         }
         window.tutupModalSiswa = () => { document.getElementById('modal-siswa').classList.remove('modal-active'); document.getElementById('modal-siswa').classList.add('hidden'); }
+        
         window.bukaModalJadwal = (isEdit = false, idDoc = "") => {
             const title = document.getElementById('title-modal-jadwal');
+            const selMapel = document.getElementById('j-mapel');
+            
+            // Populate Dropdown Mapel dari Rekap Soal (Integrasi Fitur)
+            selMapel.innerHTML = '<option value="">-- Pilih Paket Soal --</option>';
+            if(window.rekapSoalDB.length === 0) { selMapel.innerHTML += '<option value="" disabled>Belum ada Paket Soal yang dibuat di Bank Soal.</option>'; }
+            else { window.rekapSoalDB.forEach(r => selMapel.innerHTML += `<option value="${r.mapel} (Kelas ${r.kelas})">${r.mapel} (Kelas ${r.kelas}) - ${r.jumlah} Soal</option>`); }
+
             if(isEdit) {
                 title.innerText = "Edit Jadwal Ujian"; const j = window.jadwalList.find(x => x.idDoc === idDoc);
                 document.getElementById('j-id-doc').value = j.idDoc; document.getElementById('j-mapel').value = j.mapel; document.getElementById('j-tanggal').value = j.tanggal; document.getElementById('j-durasi').value = j.durasi;
@@ -497,7 +497,7 @@
         window.tutupModalJadwal = () => { document.getElementById('modal-jadwal').classList.remove('modal-active'); document.getElementById('modal-jadwal').classList.add('hidden'); }
         window.logoutApp = () => { localStorage.clear(); window.location.href="index.html"; }
 
-        // --- FUNGSI MONITOR UJIAN (SIMULASI LIVE) ---
+        // --- MONITOR LIVE ---
         window.renderTabelMonitor = () => {
             const tb = document.getElementById('tabel-monitor'); tb.innerHTML = '';
             window.dataSiswaList.forEach(s => {
@@ -510,161 +510,111 @@
                 tb.innerHTML += `<tr class="border-b"><td class="p-4 font-mono text-blue-600 font-bold">${s.username}</td><td class="p-4 font-semibold">${s.nama}</td><td class="p-4">${s.kelas||'-'}</td><td class="p-4 text-center">${badge}</td><td class="p-4 text-center">${action}</td></tr>`;
             });
         }
-        window.resetLogin = (nama) => { if(confirm(`Paksa keluar dan reset sesi ujian untuk ${nama}?`)) { alert(`Sesi ${nama} telah direset.`); renderTabelMonitor(); } }
+        window.resetLogin = (nama) => { if(confirm(`Paksa keluar dan reset sesi ujian untuk ${nama}?`)) { alert(`Sesi ${nama} direset.`); renderTabelMonitor(); } }
 
-        // ==============================================================
-        // FUNGSI BANK SOAL & REVIEW (FITUR PENAMBAHAN SOAL INDIVIDUAL)
-        // ==============================================================
+        // --- FUNGSI BANK SOAL & REKAP (FITUR JENJANG KELAS) ---
         window.renderJawabanUI = () => {
             const t = document.getElementById('tipeSoal').value; const c = document.getElementById('jawabanContainer'); c.innerHTML = '';
-            if(t === 'pg') { ['A','B','C','D','E'].forEach((x,i) => c.innerHTML += `<div class="flex gap-2 mb-2"><input type="radio" name="pg" class="mt-2 cursor-pointer" ${i===0?'checked':''}><input type="text" class="border p-2 w-full text-sm outline-none focus:border-blue-500 rounded" placeholder="Opsi Jawaban ${x}"></div>`); }
-            else if(t === 'pg_kompleks') { for(let i=1;i<=5;i++) c.innerHTML += `<div class="flex gap-2 mb-2"><input type="checkbox" class="mt-2 cursor-pointer"><input type="text" class="border p-2 w-full text-sm outline-none focus:border-blue-500 rounded" placeholder="Opsi Pernyataan ${i}"></div>`; }
+            if(t === 'pg') { ['A','B','C','D','E'].forEach((x,i) => c.innerHTML += `<div class="flex gap-2 mb-2"><input type="radio" name="pg" class="mt-2 cursor-pointer" ${i===0?'checked':''}><input type="text" class="border p-2 w-full text-sm outline-none focus:border-blue-500 rounded" placeholder="Opsi ${x}"></div>`); }
+            else if(t === 'pg_kompleks') { for(let i=1;i<=5;i++) c.innerHTML += `<div class="flex gap-2 mb-2"><input type="checkbox" class="mt-2 cursor-pointer"><input type="text" class="border p-2 w-full text-sm outline-none focus:border-blue-500 rounded" placeholder="Opsi ${i}"></div>`; }
             else if(t === 'menjodohkan') { c.innerHTML = `<div class="flex gap-4"><textarea class="w-1/2 border p-2 text-sm rounded outline-none focus:border-blue-500" placeholder="Baris Pernyataan (Sisi Kiri)"></textarea><textarea class="w-1/2 border p-2 text-sm rounded outline-none focus:border-blue-500" placeholder="Kolom Jawaban (Sisi Kanan)"></textarea></div>`; }
-            else if(t === 'isian') { c.innerHTML = `<input type="text" class="w-full border p-2 text-sm font-bold rounded outline-none focus:border-blue-500" placeholder="Kunci Jawaban Singkat (Persis)">`; }
+            else if(t === 'isian') { c.innerHTML = `<input type="text" class="w-full border p-2 text-sm font-bold rounded outline-none focus:border-blue-500" placeholder="Kunci Jawaban Singkat">`; }
         }
 
         window.simpanProfilSoal = () => {
             const mapel = document.getElementById('input-mapel').value;
-            if(mapel === "") { alert("Mata Pelajaran harus diisi!"); return; }
-            localStorage.setItem('mapelUjian', mapel); localStorage.setItem('guruUjian', document.getElementById('input-guru').value); 
-            alert("Profil Paket Soal dikunci. Kini Anda dapat memasukkan atau mengedit butir soal.");
+            const kelas = document.getElementById('input-kelas').value;
+            if(!mapel || !kelas) { alert("Mata Pelajaran dan Kelas wajib diisi!"); return; }
+            localStorage.setItem('mapelUjian', mapel); localStorage.setItem('kelasUjian', kelas); localStorage.setItem('guruUjian', document.getElementById('input-guru').value); 
+            alert("Profil Paket Soal dikunci. Kini Anda dapat memasukkan/mengedit butir soal.");
         }
 
-        // Tampilkan Tabel Review
-        window.renderDaftarSoalLokal = () => {
-            const tb = document.getElementById('tabel-daftar-soal'); tb.innerHTML = '';
-            if(window.daftarSoalLokal.length === 0) {
-                tb.innerHTML = '<tr><td colspan="4" class="text-center p-6 text-slate-500">Belum ada butir soal di paket ini. Silakan buat melalui editor di bawah.</td></tr>'; return;
-            }
-            window.daftarSoalLokal.forEach((q, i) => {
-                let badgeType = q.tipe === 'pg' ? "PG" : q.tipe === 'isian' ? "Isian" : q.tipe === 'menjodohkan' ? "Jodoh" : "PG-K";
-                tb.innerHTML += `
-                <tr class="border-b hover:bg-slate-50 transition">
-                    <td class="p-3 text-center font-bold">${i + 1}</td>
-                    <td class="p-3"><span class="bg-blue-100 text-blue-700 font-bold px-2 py-1 rounded text-xs border border-blue-200">${badgeType}</span></td>
-                    <td class="p-3 text-sm text-slate-600 line-clamp-2">${q.pertanyaan || '-'}</td>
-                    <td class="p-3 text-center">
-                        <button onclick="editSoal(${i})" class="text-yellow-600 bg-yellow-50 hover:bg-yellow-100 px-2 py-1.5 rounded transition shadow-sm mr-1" title="Edit Soal"><i class="fa-solid fa-edit"></i></button>
-                        <button onclick="hapusSoalLokal(${i})" class="text-red-500 bg-red-50 hover:bg-red-100 px-2 py-1.5 rounded transition shadow-sm" title="Hapus Soal"><i class="fa-solid fa-trash"></i></button>
-                    </td>
-                </tr>`;
+        window.renderRekapSoal = () => {
+            const tb = document.getElementById('tabel-rekap-soal'); tb.innerHTML = '';
+            if(window.rekapSoalDB.length === 0) { tb.innerHTML = '<tr><td colspan="5" class="text-center p-4 text-slate-500">Belum ada bank soal.</td></tr>'; return; }
+            window.rekapSoalDB.forEach((r, i) => {
+                tb.innerHTML += `<tr class="border-b hover:bg-slate-50"><td class="p-4 font-bold text-blue-700">${r.mapel}</td><td class="p-4 font-semibold text-slate-700">${r.kelas}</td><td class="p-4">${r.guru}</td><td class="p-4 text-center font-bold text-lg">${r.jumlah}</td><td class="p-4 text-center"><button onclick="hapusRekapSoal(${i})" class="text-red-500 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded transition shadow-sm"><i class="fa-solid fa-trash mr-1"></i> Hapus</button></td></tr>`;
             });
-            // Update Rekap Database
-            window.totalSoalDB = window.daftarSoalLokal.length;
-            localStorage.setItem('db_total_soal', window.totalSoalDB);
-            document.getElementById('stat-soal').innerText = window.totalSoalDB;
+            renderDaftarSoalLokal();
         }
 
-        // Simpan / Update individual Soal
-        window.simpanSoalLokal = () => {
+        window.simpanSoalBase = () => {
             const mapel = document.getElementById('input-mapel').value;
-            if(!mapel) { alert("Harap isi 'Mata Pelajaran' di kolom atas dan Kunci Profil terlebih dahulu!"); return; }
+            const kelas = document.getElementById('input-kelas').value;
+            const guru = document.getElementById('input-guru').value;
+            if(!mapel || !kelas) { alert("Harap isi 'Mata Pelajaran' & 'Kelas' di kolom Profil lalu klik Kunci Profil terlebih dahulu!"); return; }
 
             const indexEdit = parseInt(document.getElementById('input-soal-index').value);
             const tipe = document.getElementById('tipeSoal').value;
             const stimulus = document.getElementById('input-stimulus').value;
             const pertanyaan = document.getElementById('input-pertanyaan').value;
-
             if(!pertanyaan) { alert("Teks Pertanyaan Utama wajib diisi!"); return; }
-
             const soalBaru = { tipe, stimulus, pertanyaan };
 
             if(indexEdit > -1) {
-                // Edit Mode
                 window.daftarSoalLokal[indexEdit] = soalBaru;
-                alert(`Soal No. ${indexEdit + 1} berhasil diperbarui.`);
             } else {
-                // Tambah Baru Mode
                 window.daftarSoalLokal.push(soalBaru);
-                alert("Soal berhasil ditambahkan ke bank soal.");
+                // Update Rekap untuk penambahan soal baru
+                let idxRekap = window.rekapSoalDB.findIndex(x => x.mapel === mapel && x.kelas === kelas);
+                if(idxRekap > -1) { window.rekapSoalDB[idxRekap].jumlah += 1; } 
+                else { window.rekapSoalDB.push({ mapel: mapel, kelas: kelas, guru: guru || '-', jumlah: 1 }); }
+                localStorage.setItem('db_rekap_soal', JSON.stringify(window.rekapSoalDB));
             }
-
-            // Simpan State Array
-            localStorage.setItem('db_soal_lokal', JSON.stringify(window.daftarSoalLokal));
             
-            // Reset Form 
-            batalEditSoal();
-            renderDaftarSoalLokal();
+            localStorage.setItem('db_soal_lokal', JSON.stringify(window.daftarSoalLokal));
+            batalEditSoal(); renderRekapSoal(); alert("Soal berhasil disimpan.");
         }
 
-        // Edit Mode (Mengisi form dari Tabel)
+        window.renderDaftarSoalLokal = () => {
+            const tb = document.getElementById('tabel-daftar-soal'); tb.innerHTML = '';
+            if(window.daftarSoalLokal.length === 0) { tb.innerHTML = '<tr><td colspan="4" class="text-center p-6 text-slate-500">Belum ada butir soal di paket ini.</td></tr>'; return; }
+            window.daftarSoalLokal.forEach((q, i) => {
+                let badgeType = q.tipe === 'pg' ? "PG" : q.tipe === 'isian' ? "Isian" : q.tipe === 'menjodohkan' ? "Jodoh" : "PG-K";
+                tb.innerHTML += `<tr class="border-b hover:bg-slate-50 transition"><td class="p-3 text-center font-bold">${i + 1}</td><td class="p-3"><span class="bg-blue-100 text-blue-700 font-bold px-2 py-1 rounded text-xs border border-blue-200">${badgeType}</span></td><td class="p-3 text-sm text-slate-600 line-clamp-2">${q.pertanyaan || '-'}</td><td class="p-3 text-center"><button onclick="editSoal(${i})" class="text-yellow-600 bg-yellow-50 hover:bg-yellow-100 px-2 py-1.5 rounded transition shadow-sm mr-1"><i class="fa-solid fa-edit"></i></button><button onclick="hapusSoalLokal(${i})" class="text-red-500 bg-red-50 hover:bg-red-100 px-2 py-1.5 rounded transition shadow-sm"><i class="fa-solid fa-trash"></i></button></td></tr>`;
+            });
+            window.totalSoalDB = window.daftarSoalLokal.length; localStorage.setItem('db_total_soal', window.totalSoalDB); document.getElementById('stat-soal').innerText = window.totalSoalDB;
+        }
+
         window.editSoal = (index) => {
             const q = window.daftarSoalLokal[index];
             document.getElementById('title-editor-soal').innerText = `3. Mengedit Soal No. ${index + 1}`;
             document.getElementById('btn-text-simpan-soal').innerText = "Simpan Perubahan";
-            
             document.getElementById('input-soal-index').value = index;
-            document.getElementById('tipeSoal').value = q.tipe;
-            document.getElementById('input-stimulus').value = q.stimulus;
-            document.getElementById('input-pertanyaan').value = q.pertanyaan;
-            
-            renderJawabanUI();
-            
-            // Smooth Scroll ke Form Editor
-            document.getElementById('editor-soal').scrollIntoView({ behavior: 'smooth' });
+            document.getElementById('tipeSoal').value = q.tipe; document.getElementById('input-stimulus').value = q.stimulus; document.getElementById('input-pertanyaan').value = q.pertanyaan;
+            renderJawabanUI(); document.getElementById('editor-soal').scrollIntoView({ behavior: 'smooth' });
         }
-
         window.batalEditSoal = () => {
-            document.getElementById('title-editor-soal').innerText = "3. Editor Soal Baru";
-            document.getElementById('btn-text-simpan-soal').innerText = "Simpan ke Bank Soal";
-            document.getElementById('input-soal-index').value = "-1";
-            document.getElementById('tipeSoal').value = "pg";
-            document.getElementById('input-stimulus').value = "";
-            document.getElementById('input-pertanyaan').value = "";
-            renderJawabanUI();
+            document.getElementById('title-editor-soal').innerText = "3. Editor Soal Baru"; document.getElementById('btn-text-simpan-soal').innerText = "Simpan ke Bank Soal"; document.getElementById('input-soal-index').value = "-1"; document.getElementById('tipeSoal').value = "pg"; document.getElementById('input-stimulus').value = ""; document.getElementById('input-pertanyaan').value = ""; renderJawabanUI();
         }
-
         window.hapusSoalLokal = (index) => {
-            if(confirm(`Anda yakin ingin menghapus Soal No. ${index + 1} ini?`)) {
+            if(confirm(`Yakin hapus Soal No. ${index + 1}?`)) {
                 window.daftarSoalLokal.splice(index, 1);
                 localStorage.setItem('db_soal_lokal', JSON.stringify(window.daftarSoalLokal));
-                renderDaftarSoalLokal();
+                renderRekapSoal();
+            }
+        }
+        window.fokusEditor = () => { batalEditSoal(); document.getElementById('input-pertanyaan').focus(); }
+
+        window.hapusRekapSoal = (index) => {
+            if(confirm("Hapus rekap Mapel ini? Total soal secara sistem juga akan dikurangi.")) {
+                window.totalSoalDB -= window.rekapSoalDB[index].jumlah; if(window.totalSoalDB < 0) window.totalSoalDB = 0;
+                localStorage.setItem('db_total_soal', window.totalSoalDB); document.getElementById('stat-soal').innerText = window.totalSoalDB;
+                window.rekapSoalDB.splice(index, 1); localStorage.setItem('db_rekap_soal', JSON.stringify(window.rekapSoalDB));
+                renderRekapSoal();
             }
         }
 
-        window.fokusEditor = () => {
-            batalEditSoal();
-            document.getElementById('input-pertanyaan').focus();
-        }
-
-        // Cetak Rekapitulasi per Mapel (Excel Import Simulator)
         window.cetakRekapSoal = () => {
-            const mapel = document.getElementById('input-mapel').value || "MATA PELAJARAN BELUM DIATUR";
-            const guru = document.getElementById('input-guru').value || "GURU BELUM DIATUR";
-            if(window.daftarSoalLokal.length === 0) { alert("Belum ada soal untuk direkap/dicetak."); return; }
-            
-            const printArea = document.getElementById('print-area');
-            const sn = localStorage.getItem('schoolName') || 'SEKOLAH';
-            
-            let html = `
-            <div style="text-align:center; margin-bottom:20px; border-bottom: 2px solid #000; padding-bottom:10px;">
-                <h2 style="font-weight:bold; font-size:18px; margin:0;">ARSIP BUTIR SOAL CBT</h2>
-                <p style="margin:0; font-size:14px;">${sn.toUpperCase()}</p>
-            </div>
-            <table style="width:100%; margin-bottom:20px; font-size:14px;">
-                <tr><td width="120"><b>Mata Pelajaran</b></td><td>: ${mapel}</td></tr>
-                <tr><td><b>Guru Pengampu</b></td><td>: ${guru}</td></tr>
-                <tr><td><b>Total Soal</b></td><td>: ${window.daftarSoalLokal.length} Butir</td></tr>
-            </table>
-            <table style="width:100%; border-collapse:collapse; font-size:12px;" border="1">
-                <thead>
-                    <tr style="background-color:#f1f5f9;">
-                        <th style="padding:10px; border:1px solid #000; width:50px;">No</th>
-                        <th style="padding:10px; border:1px solid #000; width:100px;">Tipe Soal</th>
-                        <th style="padding:10px; border:1px solid #000;">Teks Pertanyaan</th>
-                    </tr>
-                </thead>
-                <tbody>`;
-            
-            window.daftarSoalLokal.forEach((q, i) => {
-                let badgeType = q.tipe === 'pg' ? "Pilihan Ganda" : q.tipe === 'isian' ? "Isian Singkat" : q.tipe === 'menjodohkan' ? "Menjodohkan" : "PG Kompleks";
-                html += `<tr>
-                    <td style="padding:8px; border:1px solid #000; text-align:center;">${i+1}</td>
-                    <td style="padding:8px; border:1px solid #000; font-weight:bold; text-align:center;">${badgeType}</td>
-                    <td style="padding:8px; border:1px solid #000;">${q.pertanyaan}</td>
-                </tr>`;
+            if(window.rekapSoalDB.length === 0) { alert("Tidak ada data rekap untuk dicetak."); return; }
+            const printArea = document.getElementById('print-area'); const sn = localStorage.getItem('schoolName') || 'SEKOLAH';
+            let html = `<div style="text-align:center; margin-bottom:20px; border-bottom: 2px solid #000; padding-bottom:10px;"><h2 style="font-weight:bold; font-size:18px; margin:0;">REKAPITULASI BANK SOAL CBT</h2><p style="margin:0; font-size:14px;">${sn.toUpperCase()}</p></div><table style="width:100%; border-collapse:collapse; font-size:14px;" border="1"><thead><tr style="background-color:#f1f5f9;"><th style="padding:10px; border:1px solid #000;">No</th><th style="padding:10px; border:1px solid #000;">Mata Pelajaran</th><th style="padding:10px; border:1px solid #000;">Kelas</th><th style="padding:10px; border:1px solid #000;">Guru Pengampu</th><th style="padding:10px; border:1px solid #000; text-align:center;">Jumlah Soal</th></tr></thead><tbody>`;
+            let grandTotal = 0;
+            window.rekapSoalDB.forEach((r, i) => {
+                grandTotal += r.jumlah;
+                html += `<tr><td style="padding:8px; border:1px solid #000; text-align:center;">${i+1}</td><td style="padding:8px; border:1px solid #000; font-weight:bold;">${r.mapel}</td><td style="padding:8px; border:1px solid #000; font-weight:bold;">${r.kelas}</td><td style="padding:8px; border:1px solid #000;">${r.guru}</td><td style="padding:8px; border:1px solid #000; text-align:center;">${r.jumlah}</td></tr>`;
             });
-            html += `</tbody></table>`;
+            html += `<tr><td colspan="4" style="padding:10px; border:1px solid #000; text-align:right; font-weight:bold;">Total Seluruh Soal</td><td style="padding:10px; border:1px solid #000; text-align:center; font-weight:bold; font-size:16px;">${grandTotal}</td></tr></tbody></table>`;
             printArea.innerHTML = html; window.print();
         }
 
@@ -674,24 +624,35 @@
             const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = "Template_Bank_Soal_ANBK.csv";
             document.body.appendChild(link); link.click(); document.body.removeChild(link);
         }
-
         window.importExcelSoal = (input) => {
             if(input.files.length > 0) {
-                const mapelSaatIni = document.getElementById('input-mapel').value;
-                if(!mapelSaatIni) { alert("Harap ketik 'Mata Pelajaran' di Profil lalu klik 'Kunci Profil' sebelum import!"); input.value = ""; return; }
-                alert(`Mensimulasikan impor data soal massal via Excel untuk mapel ${mapelSaatIni}...`);
-                
-                // Menambahkan 2 simulasi soal dari Excel
-                window.daftarSoalLokal.push({ tipe: 'pg', stimulus: '', pertanyaan: 'Pertanyaan Pilihan Ganda hasil import dari Excel baris ke-1' });
-                window.daftarSoalLokal.push({ tipe: 'isian', stimulus: '', pertanyaan: 'Pertanyaan Isian hasil import dari Excel baris ke-2' });
-                
-                localStorage.setItem('db_soal_lokal', JSON.stringify(window.daftarSoalLokal));
-                renderDaftarSoalLokal();
-                input.value = "";
+                const mapel = document.getElementById('input-mapel').value; const kelas = document.getElementById('input-kelas').value; const guru = document.getElementById('input-guru').value;
+                if(!mapel || !kelas) { alert("Harap isi 'Mapel' & 'Kelas' di Profil lalu klik 'Kunci Profil' sebelum import!"); input.value = ""; return; }
+                alert(`Memproses soal massal untuk mapel ${mapel} Kelas ${kelas}...`);
+                let index = window.rekapSoalDB.findIndex(x => x.mapel === mapel && x.kelas === kelas);
+                if(index > -1) { window.rekapSoalDB[index].jumlah += 40; } else { window.rekapSoalDB.push({ mapel: mapel, kelas: kelas, guru: guru || '-', jumlah: 40 }); }
+                localStorage.setItem('db_rekap_soal', JSON.stringify(window.rekapSoalDB));
+                window.totalSoalDB += 40; localStorage.setItem('db_total_soal', window.totalSoalDB); document.getElementById('stat-soal').innerText = window.totalSoalDB;
+                renderRekapSoal(); input.value = "";
             }
         }
 
-        // --- FUNGSI HASIL & NILAI ---
+        // --- FUNGSI EXCEL LAINNYA & HASIL NILAI ---
+        window.unduhTemplateSiswa = () => {
+            const csvContent = "NISN,Nama Lengkap,Kelas,Password\n202615,Contoh Siswa Pertama,IX-A,Siswa123\n202616,Contoh Siswa Kedua,IX-B,Rahasia123\n";
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' }); const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = "Template_Data_Siswa.csv"; document.body.appendChild(link); link.click(); document.body.removeChild(link);
+        }
+        window.importExcelSiswa = async (input) => {
+            if(input.files.length > 0) {
+                alert(`Membaca file: ${input.files[0].name}.\nMensimulasikan pengiriman data massal ke Firebase...`);
+                try {
+                    await addDoc(collection(db, "users"), { username: "202612", nama: "Siswa Excel 1", kelas: "IX", password: "P4SS", role: "siswa" });
+                    await addDoc(collection(db, "users"), { username: "202613", nama: "Siswa Excel 2", kelas: "IX", password: "R4H4", role: "siswa" });
+                    alert("Import Selesai!"); muatDataSiswa();
+                } catch(e) { alert("Gagal Import: " + e.message); }
+                input.value = "";
+            }
+        }
         window.populateDropdownHasil = () => {
             const sel = document.getElementById('select-jadwal-hasil'); sel.innerHTML = '<option value="">-- Pilih Ujian Tersedia --</option>';
             window.jadwalList.forEach((j, i) => sel.innerHTML += `<option value="${i}">${j.mapel} (${j.tanggal})</option>`);
@@ -700,11 +661,8 @@
             const val = document.getElementById('select-jadwal-hasil').value; const area = document.getElementById('area-tabel-nilai'); const tb = document.getElementById('tabel-nilai-body');
             if(val === "") { area.classList.add('hidden'); return; }
             area.classList.remove('hidden'); tb.innerHTML = '';
-            
             window.dataSiswaList.forEach(s => {
-                let tSoal = window.totalSoalDB > 0 ? window.totalSoalDB : 10; 
-                let benar = Math.floor(Math.random() * (tSoal + 1)); 
-                let nilai = Math.round((benar / tSoal) * 100);
+                let tSoal = window.totalSoalDB > 0 ? window.totalSoalDB : 40; let benar = Math.floor(Math.random() * tSoal); let nilai = Math.round((benar / tSoal) * 100);
                 tb.innerHTML += `<tr class="border-b hover:bg-slate-50 transition"><td class="p-4 font-semibold text-slate-700">${s.nama}</td><td class="p-4 text-center text-green-600 font-bold">${benar}</td><td class="p-4 text-center text-red-600 font-bold">${tSoal - benar}</td><td class="p-4 text-center font-bold text-lg text-blue-700">${nilai}</td></tr>`;
             });
         }
@@ -714,45 +672,38 @@
             const namaUjian = window.jadwalList[val].mapel;
             let csvContent = `NISN,Nama Siswa,Benar,Salah,Nilai Akhir\n`;
             window.dataSiswaList.forEach(s => {
-                let tSoal = window.totalSoalDB > 0 ? window.totalSoalDB : 10;
-                let benar = Math.floor(Math.random() * (tSoal + 1)); 
-                let nilai = Math.round((benar / tSoal) * 100);
+                let tSoal = window.totalSoalDB > 0 ? window.totalSoalDB : 40; let benar = Math.floor(Math.random() * tSoal); let nilai = Math.round((benar / tSoal) * 100);
                 csvContent += `${s.username},${s.nama},${benar},${tSoal - benar},${nilai}\n`;
             });
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = `Rekap_Nilai_${namaUjian.replace(/\s+/g, '_')}.csv`;
-            document.body.appendChild(link); link.click(); document.body.removeChild(link);
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' }); const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = `Rekap_Nilai_${namaUjian.replace(/\s+/g, '_')}.csv`; document.body.appendChild(link); link.click(); document.body.removeChild(link);
         }
 
         // --- IDENTITAS LOKAL, ASESMEN ---
         window.simpanIdentitasLokal = (e) => {
-            e.preventDefault(); 
-            localStorage.setItem('schoolName', document.getElementById('input-school-name').value);
-            localStorage.setItem('jenisUjian', document.getElementById('input-jenis-ujian').value);
-            const logo = document.getElementById('input-logo'); 
-            if(logo.dataset.base64) localStorage.setItem('schoolLogo', logo.dataset.base64);
+            e.preventDefault(); localStorage.setItem('schoolName', document.getElementById('input-school-name').value); localStorage.setItem('jenisUjian', document.getElementById('input-jenis-ujian').value);
+            const logo = document.getElementById('input-logo'); if(logo.dataset.base64) localStorage.setItem('schoolLogo', logo.dataset.base64);
             alert("Identitas & Jenis Ujian Tersimpan"); muatIdentitas();
         }
         window.previewImageLokal = (input) => {
             if(input.files && input.files[0]) { const r = new FileReader(); r.onload = (e) => { input.dataset.base64 = e.target.result; document.getElementById('preview-logo').src = e.target.result; document.getElementById('preview-logo').classList.remove('hidden'); }; r.readAsDataURL(input.files[0]); }
         }
-
         function muatIdentitas() {
-            const sn = localStorage.getItem('schoolName'); 
-            const sl = localStorage.getItem('schoolLogo');
-            const ju = localStorage.getItem('jenisUjian');
-
+            const sn = localStorage.getItem('schoolName'); const sl = localStorage.getItem('schoolLogo'); const ju = localStorage.getItem('jenisUjian');
+            const mapel = localStorage.getItem('mapelUjian'); const kelas = localStorage.getItem('kelasUjian'); const guru = localStorage.getItem('guruUjian');
+            
             if(sn) { document.getElementById('display-school-name').innerText = sn; document.getElementById('input-school-name').value = sn; }
             if(ju) { document.getElementById('sidebar-jenis-ujian').innerText = ju; document.getElementById('input-jenis-ujian').value = ju; }
             if(sl) { document.getElementById('sidebar-logo').src = sl; document.getElementById('sidebar-logo').classList.remove('hidden'); document.getElementById('sidebar-icon').classList.add('hidden'); document.getElementById('preview-logo').src = sl; document.getElementById('preview-logo').classList.remove('hidden'); }
+            if(mapel) document.getElementById('input-mapel').value = mapel;
+            if(kelas) document.getElementById('input-kelas').value = kelas;
+            if(guru) document.getElementById('input-guru').value = guru;
             document.getElementById('stat-soal').innerText = window.totalSoalDB;
         }
 
         // --- BACKUP & RESTORE JSON LOKAL ---
         window.backupData = () => {
-            const data = { sekolah: localStorage.getItem('schoolName'), jenis: localStorage.getItem('jenisUjian'), soal: window.daftarSoalLokal };
-            const a = document.createElement('a'); a.href = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data));
-            a.download = "Backup_Konfigurasi_CBT.json"; a.click();
+            const data = { sekolah: localStorage.getItem('schoolName'), jenis: localStorage.getItem('jenisUjian'), total_soal: window.totalSoalDB, rekap_soal: window.rekapSoalDB, soal: window.daftarSoalLokal };
+            const a = document.createElement('a'); a.href = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data)); a.download = "Backup_Konfigurasi_CBT.json"; a.click();
         }
         window.restoreData = (input) => {
             if(input.files.length > 0) {
@@ -763,31 +714,24 @@
                             const importedData = JSON.parse(e.target.result);
                             if(importedData.sekolah) localStorage.setItem('schoolName', importedData.sekolah);
                             if(importedData.jenis) localStorage.setItem('jenisUjian', importedData.jenis);
-                            if(importedData.soal) {
-                                window.daftarSoalLokal = importedData.soal;
-                                localStorage.setItem('db_soal_lokal', JSON.stringify(window.daftarSoalLokal));
-                            }
+                            if(importedData.total_soal !== undefined) localStorage.setItem('db_total_soal', importedData.total_soal);
+                            if(importedData.rekap_soal !== undefined) localStorage.setItem('db_rekap_soal', JSON.stringify(importedData.rekap_soal));
+                            if(importedData.soal !== undefined) localStorage.setItem('db_soal_lokal', JSON.stringify(importedData.soal));
                             alert("Restore Data JSON berhasil! Halaman akan dimuat ulang."); window.location.reload();
                         } catch(err) { alert("ERROR: Format file JSON tidak valid."); }
-                    };
-                    reader.readAsText(input.files[0]);
-                }
-                input.value = "";
+                    }; reader.readAsText(input.files[0]);
+                } input.value = "";
             }
         }
         window.hapusSemuaData = () => {
             if(confirm("YAKIN HAPUS SELURUH PENGATURAN LOKAL?")) {
-                localStorage.removeItem('schoolName'); localStorage.removeItem('schoolLogo'); localStorage.removeItem('jenisUjian'); 
-                localStorage.removeItem('db_total_soal'); localStorage.removeItem('db_soal_lokal');
-                alert("Pengaturan dikosongkan. Halaman akan direfresh."); window.location.reload();
+                localStorage.clear(); alert("Pengaturan dikosongkan. Halaman akan direfresh."); window.location.reload();
             }
         }
 
         // Init Load
         document.addEventListener("DOMContentLoaded", () => {
-            muatIdentitas(); muatDataSiswa(); muatJadwal(); renderJawabanUI(); 
-            document.getElementById('input-mapel').value = localStorage.getItem('mapelUjian') || '';
-            document.getElementById('input-guru').value = localStorage.getItem('guruUjian') || '';
+            muatIdentitas(); muatDataSiswa(); muatJadwal(); renderJawabanUI(); renderRekapSoal();
         });
     </script>
 </body>
