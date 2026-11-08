@@ -11,6 +11,24 @@
             alert("Akses Ditolak! Anda harus login sebagai siswa terlebih dahulu.");
             window.location.href = "index.html";
         }
+        // 1. Blokir Klik Kanan (Mencegah Inspect Element / Copy)
+document.addEventListener('contextmenu', event => event.preventDefault());
+
+// 2. Blokir Shortcut Keyboard (Ctrl+C, Ctrl+V, F12)
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'F12' || (e.ctrlKey && ['c', 'v', 'x', 'p', 's', 'u'].includes(e.key.toLowerCase()))) {
+        e.preventDefault();
+    }
+});
+
+// 3. Deteksi Pindah Tab (Siswa mencoba Googling)
+document.addEventListener("visibilitychange", () => {
+    if (document.hidden) {
+        // Kirim peringatan ke Database (Dashboard Guru) bahwa siswa ini pindah tab
+        alert("PERINGATAN! Anda terdeteksi keluar dari layar ujian. Pelanggaran telah dicatat oleh sistem proktor.");
+        // Opsi ekstrem: paksa submit (finishExam) jika melakukan pelanggaran > 3 kali
+    }
+});
     </script>
     <style>
         ::-webkit-scrollbar { width: 8px; height: 8px; }
