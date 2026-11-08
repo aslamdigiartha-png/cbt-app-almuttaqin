@@ -12,7 +12,7 @@
             alert("Akses Ditolak! Anda harus login sebagai siswa terlebih dahulu.");
             window.location.href = "index.html";
         }
-    </script>
+    
     <style>
         ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
@@ -416,6 +416,34 @@
             localStorage.removeItem('isLoggedIn'); // Hapus sesi login
             window.location.href = "index.html"; // Tendang ke halaman login
         }
+        // --- SISTEM KEAMANAN ANTI-MENYONTEK (ANTI-CHEATING) ---
+        
+        // 1. Blokir Klik Kanan (Inspect Element)
+        document.addEventListener('contextmenu', event => event.preventDefault());
+
+        // 2. Blokir Shortcut Keyboard Terlarang (Ctrl+C, Ctrl+V, F12, PrintScreen)
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'F12' || (e.ctrlKey && ['c', 'v', 'x', 'p', 's', 'u', 'a'].includes(e.key.toLowerCase()))) {
+                e.preventDefault();
+                alert("TINDAKAN ILEGAL TERDETEKSI: Dilarang menggunakan pintasan keyboard!");
+            }
+        });
+
+        // 3. Deteksi Pindah Tab (Siswa mencoba membuka tab Google/lainnya)
+        let pelanggaranTab = 0;
+        document.addEventListener("visibilitychange", () => {
+            if (document.hidden) {
+                pelanggaranTab++;
+                alert(`PELANGGARAN KE-${pelanggaranTab}: Anda terdeteksi keluar dari layar ujian!\n\nJika pelanggaran mencapai 3 kali, ujian Anda akan dihentikan secara otomatis.`);
+                
+                // Jika melanggar 3 kali, paksa selesai
+                if(pelanggaranTab >= 3) {
+                    alert("Batas pelanggaran terlampaui. Sistem memaksa ujian Anda selesai.");
+                    handleFinish();
+                }
+            }
+        });
+2.
     </script>
     // 1. Blokir Klik Kanan (Mencegah Copy/Paste dan Inspect Element)
 document.addEventListener('contextmenu', event => event.preventDefault());
