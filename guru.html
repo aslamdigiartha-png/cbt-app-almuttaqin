@@ -419,17 +419,74 @@
         }
         function tutupModalSiswa() { document.getElementById('modal-siswa').classList.remove('modal-active'); document.getElementById('modal-siswa').classList.add('hidden'); }
         
-        function simpanSiswa(e) {
-            e.preventDefault();
-            const index = parseInt(document.getElementById('s-index').value);
-            const dataBaru = { nisn: document.getElementById('s-nisn').value, nama: document.getElementById('s-nama').value, kelas: document.getElementById('s-kelas').value, pass: document.getElementById('s-pass').value };
-            
-            if(index > -1) { dataSiswa[index] = dataBaru; } // Edit Mode
-            else { dataSiswa.push(dataBaru); } // Add Mode
+        <!-- Ubah tag script menjadi module -->
+<script type="module">
+    // 1. Impor Firebase
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-            localStorage.setItem('db_siswa', JSON.stringify(dataSiswa));
-            renderTabelSiswa(); tutupModalSiswa(); updateDashboardStats(); e.target.reset();
+    // 2. Konfigurasi persis seperti di index.html
+    const firebaseConfig = {
+      apiKey: "AIzaSyBzAz8iihVDxQibRXgDscQ7utzsDMZZ1KM",
+      authDomain: "cbt-sekolah-almuttaqin.firebaseapp.com",
+      projectId: "cbt-sekolah-almuttaqin",
+      // ... (masukkan konfigurasi lengkap Anda)
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // 3. Modifikasi Fungsi Simpan Siswa menggunakan addDoc (Firebase)
+    window.simpanSiswa = async function(e) {
+        e.preventDefault();
+        
+        const dataBaru = { 
+            username: document.getElementById('s-nisn').value, 
+            nama: document.getElementById('s-nama').value, 
+            kelas: document.getElementById('s-kelas').value, 
+            password: document.getElementById('s-pass').value,
+            role: "siswa"
+        };
+        
+        try {
+            // Mengirim data ke koleksi "users" di Firebase
+            const docRef = await addDoc(collection(db, "users"), dataBaru);
+            alert("Berhasil! Data siswa tersimpan ke Cloud Database.");
+            
+            tutupModalSiswa(); 
+            e.target.reset();
+            // Panggil fungsi untuk me-render ulang tabel dari Firebase
+            muatSiswaDariFirebase(); 
+        } catch (error) {
+            alert("Gagal menyimpan ke server: " + error.message);
         }
+    }
+
+    // 4. Modifikasi Fungsi Tarik Data dari Firebase
+    window.muatSiswaDariFirebase = async function() {
+        const tb = document.getElementById('tabel-siswa'); 
+        tb.innerHTML = '<tr><td colspan="5" class="text-center p-4">Memuat data dari server...</td></tr>';
+        
+        try {
+            const querySnapshot = await getDocs(collection(db, "users"));
+            tb.innerHTML = ''; // Kosongkan tabel
+            
+            querySnapshot.forEach((doc) => {
+                const s = doc.data();
+                if(s.role === "siswa") {
+                    tb.innerHTML += `<tr class="border-b hover:bg-slate-50"><td class="p-4 font-bold text-blue-600">${s.username}</td><td class="p-4">${s.nama}</td><td class="p-4">${s.kelas || '-'}</td><td class="p-4">${s.password}</td><td class="p-4 text-center"><button class="text-red-500 bg-red-50 px-2 py-1 rounded">Hapus</button></td></tr>`;
+                }
+            });
+        } catch (error) {
+            tb.innerHTML = '<tr><td colspan="5" class="text-center text-red-500 p-4">Gagal memuat data</td></tr>';
+        }
+    }
+
+    // Panggil saat halaman pertama dibuka
+    document.addEventListener("DOMContentLoaded", () => {
+        muatSiswaDariFirebase();
+    });
+</script>
         
         function hapusSiswa(index) {
             if(confirm("Hapus data siswa ini?")) { dataSiswa.splice(index, 1); localStorage.setItem('db_siswa', JSON.stringify(dataSiswa)); renderTabelSiswa(); updateDashboardStats(); }
