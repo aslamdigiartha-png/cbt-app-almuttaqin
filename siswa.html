@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CBT - Ruang Ujian Siswa (Secure Mode)</title>
+    <title>CBT - Ruang Ujian Siswa (API Server Mode)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script>
@@ -17,7 +17,6 @@
         ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        /* Mencegah Teks bisa di block/seleksi oleh siswa */
         body { user-select: none; -webkit-user-select: none; }
         .token-input { letter-spacing: 0.5em; text-transform: uppercase; }
     </style>
@@ -33,6 +32,7 @@
                     <table class="w-full text-base font-medium">
                         <tr><td class="py-2 opacity-80 w-1/3">NISN</td><td class="py-2">: <span id="konf-nisn" class="font-bold"></span></td></tr>
                         <tr><td class="py-2 opacity-80">Nama Peserta</td><td class="py-2">: <span id="konf-nama" class="font-bold"></span></td></tr>
+                        <tr><td class="py-2 opacity-80">Kelas</td><td class="py-2">: <span id="konf-kelas" class="font-bold"></span></td></tr>
                         <tr><td class="py-2 opacity-80">Jadwal Aktif</td><td class="py-2">: <span id="konf-mapel" class="font-bold text-yellow-300">Cek jadwal...</span></td></tr>
                     </table>
                 </div>
@@ -41,7 +41,7 @@
                 <h3 class="text-xl font-bold text-slate-800 mb-2">Masukkan Token Ujian</h3>
                 <p class="text-sm text-slate-500 mb-6">Minta token sesi aktif kepada Proktor di ruangan Anda.</p>
                 <input type="text" id="input-token" class="w-full p-4 border-2 border-slate-300 rounded-xl text-center text-2xl font-mono font-bold token-input focus:border-blue-500 outline-none mb-6" placeholder="XXXXXX" maxlength="6" autocomplete="off">
-                <button onclick="validasiToken()" class="w-full bg-blue-600 text-white font-bold py-4 rounded-xl shadow-lg hover:bg-blue-700 transition text-lg">Mulai Ujian</button>
+                <button id="btn-mulai" onclick="validasiToken()" class="w-full bg-blue-600 text-white font-bold py-4 rounded-xl shadow-lg hover:bg-blue-700 transition text-lg">Mulai Ujian</button>
             </div>
         </div>
     </div>
@@ -59,21 +59,24 @@
             <div class="flex items-center justify-between px-4 py-2 bg-blue-700">
                 <div class="font-semibold text-sm">Ujian: <span id="display-mapel" class="text-yellow-300">...</span></div>
                 <div class="flex items-center gap-4">
-                    <div class="flex items-center bg-blue-900 px-3 py-1 rounded border border-blue-600"><span class="text-xs mr-2 text-blue-300">Waktu:</span><span id="timer" class="font-mono font-bold text-lg text-yellow-400">00:00</span></div>
-                    <button onclick="finishExam()" class="bg-red-600 hover:bg-red-700 px-4 py-1.5 rounded font-semibold text-sm">Selesai</button>
+                    <div class="flex items-center bg-blue-900 px-3 py-1 rounded border border-blue-600"><span class="text-xs mr-2 text-blue-300">Waktu:</span><span id="timer" class="font-mono font-bold text-lg text-yellow-400">00:00:00</span></div>
+                    <button onclick="finishExam()" class="bg-red-600 hover:bg-red-700 px-4 py-1.5 rounded font-semibold text-sm shadow">Selesai</button>
                 </div>
             </div>
         </header>
 
         <main class="flex flex-1 flex-col lg:flex-row overflow-hidden relative">
+            <!-- Kolom Wacana/Stimulus -->
             <section class="lg:w-2/5 bg-white border-r flex flex-col h-1/2 lg:h-full">
                 <div class="bg-gray-100 border-b px-4 py-2 font-bold text-gray-700">Informasi / Bacaan</div>
                 <div id="stimulus-content" class="p-6 overflow-y-auto flex-1 text-gray-800 text-justify leading-relaxed"></div>
             </section>
+            
+            <!-- Kolom Pertanyaan -->
             <section class="lg:w-2/5 bg-blue-50 flex flex-col h-1/2 lg:h-full relative shadow-inner">
                 <div class="flex justify-between items-center bg-white border-b px-4 py-2 font-bold text-gray-700 sticky top-0 shadow-sm z-10">
                     <span>Soal No. <span id="current-question-no" class="text-xl text-blue-700">1</span></span>
-                    <span id="save-status" class="text-xs font-semibold text-green-500 hidden"><i class="fa-solid fa-cloud-arrow-up"></i> Disimpan</span>
+                    <span id="save-status" class="text-xs font-semibold text-green-500 hidden"><i class="fa-solid fa-cloud-arrow-up"></i> Disimpan ke Server</span>
                 </div>
                 <div id="question-content" class="p-6 overflow-y-auto flex-1 pb-24 text-gray-800"></div>
                 <div class="absolute bottom-0 left-0 w-full bg-white border-t p-4 flex justify-between items-center z-10">
@@ -82,11 +85,20 @@
                     <button id="btn-next" onclick="navigate(1)" class="bg-blue-600 text-white px-4 py-2 rounded">Lanjut &rarr;</button>
                 </div>
             </section>
+            
+            <!-- Kolom Navigasi -->
             <section class="lg:w-1/5 bg-white border-l flex flex-col h-full z-20">
                 <div class="bg-gray-800 text-white px-4 py-2 font-bold text-center">Navigasi Soal</div>
                 <div class="p-4 overflow-y-auto flex-1"><div id="question-grid" class="grid grid-cols-5 gap-2"></div></div>
             </section>
         </main>
+    </div>
+
+    <!-- Layar Loading (Mencegah Klik Saat Server Memproses) -->
+    <div id="lock-screen" class="fixed inset-0 bg-black/90 z-50 hidden flex-col items-center justify-center text-white">
+        <h2 class="text-3xl font-bold mb-2">Mengirim ke Server...</h2>
+        <p class="text-lg text-gray-300 mb-4">Mohon tunggu, sistem sedang mengoreksi jawaban Anda.</p>
+        <div class="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
     </div>
 
     <!-- 3. MODAL HASIL -->
@@ -97,88 +109,114 @@
                 <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center text-green-500 text-4xl mx-auto mb-4 border-4 border-green-100"><i class="fa-solid fa-check"></i></div>
                 <h2 class="text-2xl font-bold mb-1">Ujian Selesai!</h2>
                 <h1 id="skor-akhir" class="text-7xl font-black text-blue-700 my-6">0</h1>
-                <button onclick="keluarSistem()" class="w-full bg-slate-800 text-white font-bold py-4 rounded-xl shadow-lg">Keluar Aplikasi</button>
+                <button onclick="keluarSistem()" class="w-full bg-slate-800 text-white font-bold py-4 rounded-xl shadow-lg hover:bg-slate-900 transition">Keluar Aplikasi</button>
             </div>
         </div>
     </div>
 
+    <!-- LOGIKA JAVASCRIPT: BERKOMUNIKASI DENGAN SERVER NODE.JS -->
     <script>
-        // INIT DATA
+        // ALAMAT SERVER NODE.JS (Ganti IP jika menggunakan WiFi/VPS)
+        const BASE_API_URL = 'http://localhost:3000/api';
+
+        // 1. MUAT DATA IDENTITAS DARI LOCALSTORAGE
+        const userId = localStorage.getItem('userId');
+        const sessionToken = localStorage.getItem('sessionToken');
         const nisn = localStorage.getItem('userName');
+        const userRealName = localStorage.getItem('userRealName');
+        const userClass = localStorage.getItem('userClass') || '-';
+        
         const dbJadwal = JSON.parse(localStorage.getItem('db_jadwal')) || [];
         const jadwalAktif = dbJadwal.length > 0 ? dbJadwal[dbJadwal.length - 1] : null;
 
         document.getElementById('konf-nisn').innerText = nisn;
-        document.getElementById('konf-nama').innerText = localStorage.getItem('userRealName');
-        document.getElementById('konf-mapel').innerText = jadwalAktif ? jadwalAktif.mapel : "Tidak Ada Ujian";
+        document.getElementById('konf-nama').innerText = userRealName;
+        document.getElementById('konf-kelas').innerText = userClass;
+        document.getElementById('konf-mapel').innerText = jadwalAktif ? jadwalAktif.mapel : "Tidak Ada Ujian Tersedia";
 
-        // VALIDASI TOKEN
         let timerSeconds = 0;
         let timerInterval;
+        let questionsData = []; // Array ini nanti diisi soal dari Server, TANPA Kunci Jawaban
+        let currentIndex = 0;
 
-        window.validasiToken = function() {
+        // 2. FUNGSI VALIDASI & TARIK SOAL DARI SERVER API
+        window.validasiToken = async function() {
             const token = document.getElementById('input-token').value.trim().toUpperCase();
-            if(!jadwalAktif && token !== "BYPASS") { alert("Tidak ada jadwal ujian dari server."); return; }
+            if(!jadwalAktif && token !== "BYPASS") { alert("Tidak ada jadwal aktif!"); return; }
             
             if((jadwalAktif && token === jadwalAktif.token) || token === "BYPASS") {
-                document.getElementById('view-konfirmasi').style.display = 'none';
-                document.getElementById('view-ujian').classList.remove('hidden');
-                document.getElementById('view-ujian').classList.add('flex');
-                
-                document.getElementById('display-mapel').innerText = jadwalAktif ? jadwalAktif.mapel : "TESTING";
-                timerSeconds = (jadwalAktif ? parseInt(jadwalAktif.durasi) : 90) * 60;
-                
-                renderGrid(); renderQuestion(0); startTimer();
-            } else { alert("Token Tidak Valid!"); document.getElementById('input-token').value = ""; }
-        }
-// ... (kode sebelumnya) ...
+                const btnMulai = document.getElementById('btn-mulai');
+                btnMulai.innerText = "Mengambil Soal dari Server...";
+                btnMulai.disabled = true;
 
-        // VALIDASI TOKEN
-        let timerSeconds = 0;
-        let timerInterval;
+                try {
+                    // API Call: Mengambil soal sesuai mapel & kelas siswa (Dilengkapi SessionToken)
+                    const response = await fetch(`${BASE_API_URL}/soal/${jadwalAktif.mapel}/${userClass}`, {
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'userid': userId,
+                            'sessiontoken': sessionToken
+                        }
+                    });
 
-        window.validasiToken = function() {
-            const token = document.getElementById('input-token').value.trim().toUpperCase();
-            if(!jadwalAktif && token !== "BYPASS") { alert("Tidak ada jadwal ujian dari server."); return; }
-            
-            if((jadwalAktif && token === jadwalAktif.token) || token === "BYPASS") {
-                document.getElementById('view-konfirmasi').style.display = 'none';
-                document.getElementById('view-ujian').classList.remove('hidden');
-                document.getElementById('view-ujian').classList.add('flex');
-                
-                document.getElementById('display-mapel').innerText = jadwalAktif ? jadwalAktif.mapel : "TESTING";
-                timerSeconds = (jadwalAktif ? parseInt(jadwalAktif.durasi) : 90) * 60;
-                
-                renderGrid(); renderQuestion(0); startTimer();
-                
-                // --- TAMBAHAN BARU: MEMANGGIL FUNGSI FULLSCREEN ---
-                masukModeLayarPenuh();
+                    const result = await response.json();
 
-            } else { alert("Token Tidak Valid!"); document.getElementById('input-token').value = ""; }
-        }
+                    // Cek jika siswa ditendang karena Multi-Login
+                    if (result.status === 'force_logout') {
+                        alert(result.message);
+                        keluarSistem();
+                        return;
+                    }
 
-        // --- TAMBAHAN BARU: FUNGSI MEMAKSA BROWSER FULLSCREEN ---
-        function masukModeLayarPenuh() {
-            let elemen = document.documentElement;
-            if (elemen.requestFullscreen) {
-                elemen.requestFullscreen();
-            } else if (elemen.webkitRequestFullscreen) { /* Safari */
-                elemen.webkitRequestFullscreen();
-            } else if (elemen.msRequestFullscreen) { /* IE11 */
-                elemen.msRequestFullscreen();
+                    if (result.status === 'success' && result.data.length > 0) {
+                        questionsData = result.data; // Inject soal dari server ke array
+                        
+                        // Siapkan status bawaan untuk tiap soal
+                        questionsData.forEach(q => {
+                            q.ragu = false;
+                            q.isAnswered = false;
+                            q.answer = null; 
+                        });
+
+                        // Ganti Tampilan ke Ruang Ujian
+                        document.getElementById('view-konfirmasi').style.display = 'none';
+                        document.getElementById('view-ujian').classList.remove('hidden');
+                        document.getElementById('view-ujian').classList.add('flex');
+                        
+                        document.getElementById('display-mapel').innerText = jadwalAktif.mapel;
+                        timerSeconds = parseInt(jadwalAktif.durasi) * 60;
+                        
+                        renderGrid(); 
+                        renderQuestion(0); 
+                        startTimer();
+
+                        // -- WAJIB: PAKSA MASUK MODE FULLSCREEN --
+                        masukModeLayarPenuh();
+
+                    } else {
+                        alert("Gagal: Bank Soal untuk Mata Pelajaran dan Kelas ini belum diinput oleh Guru di Server!");
+                        btnMulai.innerText = "Mulai Ujian"; btnMulai.disabled = false;
+                    }
+                } catch (error) {
+                    alert("Koneksi ke Server Terputus! Pastikan server Node.js menyala.");
+                    btnMulai.innerText = "Mulai Ujian"; btnMulai.disabled = false;
+                }
+            } else { 
+                alert("Token Tidak Valid!"); 
+                document.getElementById('input-token').value = ""; 
             }
         }
 
-        // SOAL DUMMY (Pengganti Tarikan Firebase agar Prototipe Tetap Jalan)
-        // ... (kode setelahnya) ...
-        // SOAL DUMMY (Pengganti Tarikan Firebase agar Prototipe Tetap Jalan)
-        let questionsData = [];
-        for (let i = 1; i <= 20; i++) {
-            questionsData.push({ id: i, type: 'pg', stimulus: `<p>Stimulus soal simulasi nomor ${i}.</p>`, questionText: `Pilih jawaban A untuk mendapat skor benar di soal ${i}.`, options: ['A (Benar)', 'B', 'C', 'D'], kunci: 0, answer: null, ragu: false, isAnswered: false });
+        // FUNGSI MEMAKSA FULLSCREEN
+        function masukModeLayarPenuh() {
+            let elemen = document.documentElement;
+            if (elemen.requestFullscreen) { elemen.requestFullscreen(); } 
+            else if (elemen.webkitRequestFullscreen) { elemen.webkitRequestFullscreen(); } 
+            else if (elemen.msRequestFullscreen) { elemen.msRequestFullscreen(); }
         }
-        
-        let currentIndex = 0;
 
+        // 3. FUNGSI RENDER TAMPILAN UJIAN
         function renderGrid() {
             const grid = document.getElementById('question-grid'); grid.innerHTML = '';
             questionsData.forEach((q, i) => {
@@ -186,66 +224,138 @@
                 b.className = `w-10 h-10 font-bold rounded text-sm border`; updateGridBtn(b, i); grid.appendChild(b);
             });
         }
+
         function updateGridBtn(b, i) {
             const q = questionsData[i];
             b.className = `w-10 h-10 font-bold rounded text-sm border ${q.ragu?'bg-yellow-400 text-white':q.isAnswered?'bg-green-500 text-white':'bg-white text-gray-700'}`;
             if(i === currentIndex) b.classList.add('border-blue-700', 'border-2');
         }
+
         window.goToQuestion = (i) => { currentIndex = i; renderQuestion(i); }
         window.navigate = (step) => { if(currentIndex+step >= 0 && currentIndex+step < questionsData.length) goToQuestion(currentIndex+step); }
 
         function renderQuestion(i) {
             const q = questionsData[i];
             document.getElementById('current-question-no').innerText = i+1;
-            document.getElementById('stimulus-content').innerHTML = q.stimulus;
+            document.getElementById('stimulus-content').innerHTML = q.stimulus || '<p class="text-slate-400 italic">Tidak ada informasi tambahan.</p>';
             document.getElementById('checkbox-ragu').checked = q.ragu;
             
-            let html = `<p class="text-lg font-medium mb-4">${q.questionText}</p><div class="space-y-2">`;
-            q.options.forEach((opt, idx) => {
-                html += `<label class="flex p-3 border rounded cursor-pointer ${q.answer===idx?'bg-blue-100 border-blue-400':''}"><input type="radio" name="ans" class="mt-1 mr-3" onchange="handleAnswer(${idx})" ${q.answer===idx?'checked':''}>${opt}</label>`;
-            });
-            document.getElementById('question-content').innerHTML = html + `</div>`;
-            document.getElementById('btn-prev').disabled = i === 0; document.getElementById('btn-next').disabled = i === questionsData.length-1;
+            let html = `<p class="text-lg font-medium mb-5 text-justify">${q.pertanyaan}</p>`;
+            
+            if (q.tipe === 'pg') {
+                html += `<div class="space-y-3">`;
+                // Simulasi opsi A, B, C, D, E (Di sistem nyata opsi ditarik dari array q.opsi)
+                ['A', 'B', 'C', 'D'].forEach((opt, idx) => {
+                    html += `<label class="flex p-4 border rounded-lg cursor-pointer transition ${q.answer===idx?'bg-blue-100 border-blue-400 font-bold':'bg-white hover:bg-slate-50'}">
+                        <input type="radio" name="ans" class="mt-1 mr-3 w-4 h-4 accent-blue-600" onchange="handleAnswer(${idx})" ${q.answer===idx?'checked':''}> Opsi ${opt}
+                    </label>`;
+                });
+                html += `</div>`;
+            } else if (q.tipe === 'isian') {
+                html += `<input type="text" value="${q.answer || ''}" onblur="handleAnswer(this.value)" class="w-full p-4 border-2 rounded-lg text-lg font-bold focus:border-blue-500 outline-none" placeholder="Ketik jawaban Anda...">`;
+            }
+
+            document.getElementById('question-content').innerHTML = html;
+            document.getElementById('btn-prev').disabled = i === 0; 
+            document.getElementById('btn-next').disabled = i === questionsData.length-1;
             questionsData.forEach((_, x) => updateGridBtn(document.getElementById(`grid-btn-${x}`), x));
         }
 
-        // FITUR AUTO-SAVE
-        window.handleAnswer = (val) => {
-            questionsData[currentIndex].answer = val;
-            questionsData[currentIndex].isAnswered = true;
-            updateGridBtn(document.getElementById(`grid-btn-${currentIndex}`), currentIndex);
-            renderQuestion(currentIndex);
-            
-            // Animasi Auto-Save UI
-            const saveInd = document.getElementById('save-status');
-            saveInd.classList.remove('hidden');
-            setTimeout(() => saveInd.classList.add('hidden'), 1000);
-            
-            // NOTE: Di sini tempat backend developer memasukkan kode Firebase updateDoc()
-            // Contoh: await updateDoc(doc(db, "hasil", user_id), { ["soal_"+currentIndex] : val });
-        }
-        
         window.toggleRagu = (cb) => { questionsData[currentIndex].ragu = cb.checked; updateGridBtn(document.getElementById(`grid-btn-${currentIndex}`), currentIndex); }
 
+        // 4. FITUR AUTO-SAVE KE SERVER (AJAX)
+        window.handleAnswer = (val) => {
+            const q = questionsData[currentIndex];
+            q.answer = val;
+            q.isAnswered = String(val).trim().length > 0;
+            
+            updateGridBtn(document.getElementById(`grid-btn-${currentIndex}`), currentIndex);
+            if(q.tipe === 'pg') renderQuestion(currentIndex); 
+            
+            // Panggil API Auto-Save
+            simpanJawabanKeServer(q.id_soal, val);
+        }
+
+        async function simpanJawabanKeServer(idSoalDb, jawaban) {
+            try {
+                const response = await fetch(`${BASE_API_URL}/autosave`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'userid': userId, 'sessiontoken': sessionToken },
+                    body: JSON.stringify({
+                        jadwal_id: jadwalAktif.idDoc || 'JADWAL_DUMMY', 
+                        id_soal: idSoalDb, 
+                        jawaban: jawaban 
+                    })
+                });
+                
+                const result = await response.json();
+                
+                // Deteksi Multi-Login
+                if(result.status === 'force_logout') { 
+                    alert(result.message); keluarSistem(); return;
+                }
+
+                // UI Feedback (Tersimpan)
+                const saveInd = document.getElementById('save-status');
+                saveInd.classList.remove('hidden');
+                setTimeout(() => saveInd.classList.add('hidden'), 1500);
+
+            } catch(e) {
+                console.warn("Jaringan terputus. Sistem akan menyimpan ke server kembali saat jaringan stabil.");
+            }
+        }
+
+        // 5. TIMER 
         function startTimer() {
             timerInterval = setInterval(() => {
                 timerSeconds--;
-                let h = Math.floor(timerSeconds / 3600); let m = Math.floor((timerSeconds % 3600) / 60); let s = timerSeconds % 60;
+                let h = Math.floor(timerSeconds / 3600); 
+                let m = Math.floor((timerSeconds % 3600) / 60); 
+                let s = timerSeconds % 60;
                 document.getElementById('timer').innerText = `${h<10?'0'+h:h}:${m<10?'0'+m:m}:${s<10?'0'+s:s}`;
+                
                 if(timerSeconds <= 0) { clearInterval(timerInterval); processFinish(); }
             }, 1000);
         }
 
-        window.finishExam = () => { if(confirm("Yakin selesaikan ujian?")) { clearInterval(timerInterval); processFinish(); } }
+        // 6. AUTO-KOREKSI DI SERVER
+        window.finishExam = () => { if(confirm("Yakin selesaikan ujian? Jawaban akan dikirim secara permanen ke server.")) { clearInterval(timerInterval); processFinish(); } }
 
-        function processFinish() {
+        async function processFinish() {
+            // Sembunyikan ujian, tampilkan animasi loading
             document.getElementById('view-ujian').style.display = 'none';
-            let benar = 0; questionsData.forEach(q => { if(q.answer === q.kunci) benar++; });
-            let nilai = Math.round((benar / questionsData.length) * 100);
-            
-            document.getElementById('skor-akhir').innerText = nilai;
-            document.getElementById('view-hasil-skor').classList.remove('hidden');
-            document.getElementById('view-hasil-skor').classList.add('flex');
+            document.getElementById('lock-screen').classList.replace('hidden', 'flex');
+
+            try {
+                // API Call: Minta Server melakukan Auto-Koreksi
+                const response = await fetch(`${BASE_API_URL}/submit`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'userid': userId, 'sessiontoken': sessionToken },
+                    body: JSON.stringify({
+                        jadwal_id: jadwalAktif.idDoc || 'JADWAL_DUMMY',
+                        mapel: jadwalAktif.mapel,
+                        kelas: userClass
+                    })
+                });
+
+                const result = await response.json();
+                document.getElementById('lock-screen').classList.replace('flex', 'hidden');
+
+                if (result.status === 'success') {
+                    // Tampilkan nilai akhir yang dihitung oleh server
+                    document.getElementById('skor-akhir').innerText = result.data.nilai;
+                    document.getElementById('view-hasil-skor').classList.remove('hidden');
+                    document.getElementById('view-hasil-skor').classList.add('flex');
+                } else if (result.status === 'force_logout') {
+                    alert(result.message); keluarSistem();
+                } else {
+                    alert("Gagal memproses nilai: " + result.message);
+                }
+            } catch (error) {
+                alert("Gagal mengirim perintah koreksi ke server! Periksa koneksi internet.");
+                document.getElementById('lock-screen').classList.replace('flex', 'hidden');
+                document.getElementById('view-ujian').style.display = 'flex'; // Kembalikan ke ujian
+            }
         }
 
         window.keluarSistem = () => { localStorage.clear(); window.location.href="index.html"; }
@@ -268,13 +378,12 @@
         // 3. Deteksi Pindah Tab / Pindah Jendela Browser
         let violationCount = 0;
         document.addEventListener("visibilitychange", () => {
-            // Berlaku hanya jika layar ujian sedang aktif (bukan layar konfirmasi/hasil)
             if (document.hidden && document.getElementById('view-ujian').style.display !== 'none' && !document.getElementById('view-ujian').classList.contains('hidden')) {
                 violationCount++;
                 alert(`PELANGGARAN KE-${violationCount}: Anda keluar dari layar ujian!\n\nJika melanggar 3 kali, ujian akan dihentikan paksa.`);
                 
                 if(violationCount >= 3) {
-                    alert("BATAS PELANGGARAN TERLAMPAUI. Ujian otomatis diselesaikan.");
+                    alert("BATAS PELANGGARAN TERLAMPAUI. Ujian otomatis diselesaikan dan jawaban terakhir dikirim ke server.");
                     clearInterval(timerInterval);
                     processFinish();
                 }
