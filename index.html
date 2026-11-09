@@ -108,55 +108,43 @@
         };
 
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const userVal = document.getElementById('username').value.trim();
-            const passVal = document.getElementById('password').value.trim();
-            
-            const btnText = document.getElementById('btn-text');
-            const spinner = document.getElementById('loading-spinner');
-            const errorMsg = document.getElementById('error-msg');
-            const errorText = document.getElementById('error-text');
-            
-            btnText.innerText = "Memeriksa Database...";
-            spinner.style.display = "block";
-            errorMsg.classList.add('hidden');
+    e.preventDefault();
+    const userVal = document.getElementById('username').value.trim();
+    const passVal = document.getElementById('password').value.trim();
+    const roleVal = window.currentRole; // 'siswa' atau 'staf'
 
-            try {
-                const usersRef = collection(db, "users");
-                // Cari berdasarkan username & password
-                const q = query(
-                    usersRef, 
-                    where("username", "==", userVal), 
-                    where("password", "==", passVal),
-                    where("role", "in", window.currentRole === 'siswa' ? ["siswa"] : ["guru", "admin"])
-                );
-                
-                const querySnapshot = await getDocs(q);
-
-                if (querySnapshot.empty) {
-                    errorText.innerText = "Username atau Password salah/tidak ditemukan!";
-                    errorMsg.classList.remove('hidden');
-                } else {
-                    let userData;
-                    querySnapshot.forEach((doc) => { userData = doc.data(); });
-
-                    localStorage.setItem('isLoggedIn', 'true');
-                    localStorage.setItem('userName', userData.username);
-                    localStorage.setItem('userRealName', userData.nama || userData.username);
-                    localStorage.setItem('userRole', userData.role);
-                    localStorage.setItem('userClass', userData.kelas || '-');
-
-                    window.location.href = userData.role === 'siswa' ? "siswa.html" : "guru.html";
-                }
-            } catch (error) {
-                console.error(error);
-                errorText.innerText = "Gagal terhubung ke Server Cloud. Periksa koneksi internet.";
-                errorMsg.classList.remove('hidden');
-            } finally {
-                btnText.innerText = "Verifikasi & Masuk";
-                spinner.style.display = "none";
-            }
+    try {
+        // MENGETUK PINTU SERVER NODE.JS
+        const response = await fetch('http://localhost:3000/api/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                username: userVal,
+                password: passVal,
+                role: roleVal === 'staf' ? 'guru' : 'siswa' // sesuaikan role
+            })
         });
-    </script>
+
+        const result = await response.json();
+
+        if (result.status === 'success') {
+            // Login Berhasil! Simpan Session Token dari Server
+            localStorage.setItem('isLoggedIn', 'true');
+            localStorage.setItem('userId', result.data.id);
+            localStorage.setItem('sessionToken', result.data.sessionToken);
+            localStorage.setItem('userName', result.data.username);
+            localStorage.setItem('userRole', result.data.role);
+            
+            window.location.href = result.data.role === 'siswa' ? "siswa.html" : "guru.html";
+        } else {
+            // Login Gagal (Password salah, dll)
+            document.getElementById('error-text').innerText = result.message;
+            document.getElementById('error-msg').classList.remove('hidden');
+        }
+    } catch (error) {
+        document.getElementById('error-text').innerText = "Server CBT sedang offline!";
+        document.getElementById('error-msg').classList.remove('hidden');
+    }
+});    </script>
 </body>
 </html>
